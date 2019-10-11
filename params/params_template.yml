@@ -1,0 +1,22 @@
+experiment: 
+  name: "three-sat"
+  author: "vivek"
+  tracking-uri: "http://localhost:5000"
+  seed: 1032918
+
+initialise:
+  source: "src/generate-instances.R"
+  params:
+    n_qubits: 2
+    k: 1
+    n_sat: 2
+    
+build_hamiltonians:
+  source: "src/build-hamiltonians/construct-time-evolution.R"
+  params:
+    n_qubits: 2
+    t_step: 0.01
+    num_energy_levs: 4
+  
+results:
+  source: "src/plot-energy-gap.R"
