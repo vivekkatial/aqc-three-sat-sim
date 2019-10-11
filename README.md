@@ -1,2 +1,2 @@
-# aqc-three-sat-sim
-Simulation of Adiabatic Quantum Optimisation 
+# Simulation of Adiabatic Quantum Optimisation 
+
