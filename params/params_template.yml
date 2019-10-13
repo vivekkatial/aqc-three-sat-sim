@@ -7,16 +7,16 @@ experiment:
 initialise:
   source: "src/generate-instances.R"
   params:
-    n_qubits: {{n_qubits}}
-    k: {{k}}
-    n_sat: {{n_sat}}
+    n_qubits: "{{n_qubits}}"
+    k: "{{k}}"
+    n_sat: "{{n_sat}}"
     
 build_hamiltonians:
   source: "src/build-hamiltonians/construct-time-evolution.R"
   params:
-    n_qubits: {{n_qubits}}
-    t_step: {{t_step}}
-    num_energy_levs: {{num_energy_levs}}
+    n_qubits: "{{n_qubits}}"
+    t_step: "{{t_step}}"
+    num_energy_levs: "{{num_energy_levs}}"
   
 results:
   source: "src/plot-energy-gap.R"
