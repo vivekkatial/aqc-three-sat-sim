@@ -40,15 +40,13 @@ make_parameter_filename = function(...){
 
 make_parameter_file = function(...){
   
-  # browser()
-  
   # Unpack parameters 
   params <- list(...)
   parameter_file = param_template
   
   # Read template file
   for (param in names(params)) {
-    parameter_file = str_replace(
+    parameter_file = str_replace_all(
       parameter_file, 
       pattern = paste0("\\{\\{", param, "\\}\\}"), 
       replace = as.character(params[[param]])
@@ -59,6 +57,19 @@ make_parameter_file = function(...){
   
 }
 
+#' This function writes parameter files
+#' We need to make sure a directory to hold  them is  there
+#' @param parameter_file_name Name of  the parameter file (from parameter grid)
+#' @param 
+.write_parameter_file = function(parameter_file_name, parameter_content){
+  
+  # Construct filename
+  file_name <- file.path("params", "ready",  parameter_file_name)
+  
+  # Write file out to path
+  write_file(parameter_content, file_name)
+}
+
 
 
 
@@ -67,8 +78,14 @@ make_parameter_file = function(...){
 param_grid <- param_spec %>% 
   cross_df() %>% 
   mutate(
-    parameter_filename = pmap_chr(., make_parameter_filename),
-    parameter_file     = pmap_chr(., make_parameter_file)
+    parameter_filename         = pmap_chr(., make_parameter_filename),
+    parameter_file_content     = pmap_chr(., make_parameter_file)
   )
 
-param_grid
+#  Write out  to  files
+mapply(
+  .write_parameter_file, 
+  param_grid$parameter_filename, 
+  param_grid$parameter_file_content
+  )
+
