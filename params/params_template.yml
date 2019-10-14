@@ -16,7 +16,7 @@ build_hamiltonians:
   params:
     n_qubits: "{{n_qubits}}"
     t_step: "{{t_step}}"
-    num_energy_levs: "{{num_energy_levs}}"
+    num_energy_levels: "{{num_energy_levels}}"
   
 results:
   source: "src/plot-energy-gap.R"

@@ -15,12 +15,48 @@ library(tidyverse)
 
 # Read in relavent files
 param_spec <- read_yaml("params/params_spec.yml")
-param_template <- read_yaml("params/params_template.yml")
+param_template <- read_file("params/params_template.yml")
 
-# Function to generate parameter_file -------------------------------------------
+# Functions to generate parameter_file -------------------------------------------
 
-make_parameter_file <- function(...){
-  browser()
+make_parameter_filename = function(...){
+  
+  # Unpack parameters 
+  params <- list(...)
+  
+  # Make file name
+  names <- names(params)
+  vals  <- params %>% 
+    flatten_chr()
+  
+  # Construct file_name
+  file_name = paste0(names, vals, collapse = "__") %>% 
+    paste0(".yml")
+  
+  file_name
+  
+}
+
+
+make_parameter_file = function(...){
+  
+  # browser()
+  
+  # Unpack parameters 
+  params <- list(...)
+  parameter_file = param_template
+  
+  # Read template file
+  for (param in names(params)) {
+    parameter_file = str_replace(
+      parameter_file, 
+      pattern = paste0("\\{\\{", param, "\\}\\}"), 
+      replace = as.character(params[[param]])
+    )
+  }
+  
+  parameter_file
+  
 }
 
 
@@ -31,7 +67,8 @@ make_parameter_file <- function(...){
 param_grid <- param_spec %>% 
   cross_df() %>% 
   mutate(
-    parameter_file = pmap(., make_parameter_file)
+    parameter_filename = pmap_chr(., make_parameter_filename),
+    parameter_file     = pmap_chr(., make_parameter_file)
   )
 
 param_grid
