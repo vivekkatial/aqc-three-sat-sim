@@ -40,6 +40,8 @@ make_parameter_filename = function(...){
 
 make_parameter_file = function(...){
   
+  # TODO: Check that all parameters in param_spec are also present in param template!
+  
   # Unpack parameters 
   params <- list(...)
   parameter_file = param_template
@@ -62,6 +64,8 @@ make_parameter_file = function(...){
 #' @param parameter_file_name Name of  the parameter file (from parameter grid)
 #' @param 
 .write_parameter_file = function(parameter_file_name, parameter_content){
+  
+  # TODO: Check if all necessary folders are present!
   
   # Construct filename
   file_name <- file.path("params", "ready",  parameter_file_name)
