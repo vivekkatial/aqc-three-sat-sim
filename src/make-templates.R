@@ -86,6 +86,11 @@ param_grid <- param_spec %>%
     parameter_file_content     = pmap_chr(., make_parameter_file)
   )
 
+
+# TODO: FILTER GRID FOR IMPOSSIBLE VALUES ---------------------------------
+
+# TODO All of this
+
 #  Write out  to  files
 mapply(
   .write_parameter_file, 
