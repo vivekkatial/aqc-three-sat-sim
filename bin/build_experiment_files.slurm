@@ -15,6 +15,8 @@
 
 # Load the environment variables for R
 module load R/3.5.0-spartan_gcc-6.2.0 
+module load Singularity/3.2.0-spartan_gcc-6.2.0
 
 # The command to actually run the job
-R --vanilla < src/make-templates.R 
+singularity exec vsoch-hello-world-master.simg echo "Hello from inside my container!" > output.txt
+
