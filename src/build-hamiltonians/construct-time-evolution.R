@@ -17,7 +17,7 @@ source("src/build-hamiltonians/generate-problem-ham.R")
 #' Function to generate the time evolving system
 generate_time_evolving_system = function(d_clauses, ...){
 
-#  browser()  
+  # browser()  
   # Unpack parameters
   params = list(...)[[1]]
   
@@ -42,7 +42,7 @@ generate_time_evolving_system = function(d_clauses, ...){
       hamiltonian = map(t, function(t) {H_b*(1-(t/params$time_T)) + H_p*(t/params$time_T)})
     )
   
-  for (i in 1:params$num_energy_levs) {
+  for (i in 1:params$num_energy_levels) {
     
     # Construct col names
     var <- paste0("n_", i)
@@ -72,61 +72,3 @@ get_eigen = function(hamiltionian, n){
     nth(n=n)
   
 }
-
-
-
-# OLD STUFF ---------------------------------------------------------------
-
-# Define Pauli X matrix
-# X = matrix(c(0,1,1,0), nrow = 2, ncol = 2)
-# Had = 1/sqrt(2) * matrix(c(1,1,1,-1),nrow=2,ncol=2)
-# 
-# 
-# # Define the initial hamiltonion given by 0.5*(I - \sigma_x)
-# H_init = 0.5*(diag(1,2,2)- X)
-# 
-# H_init = matrix(c(0,0.1,0.1,1.0), nrow = 2, ncol = 2)
-# 
-# # Define the Problem Matrix
-# H_p = matrix(c(1,0,0,0), nrow = 2, ncol = 2)
-# 
-# d_time <- tibble(
-#   s = seq(0, 1, by = 0.01)
-# )
-# 
-# find_state = function(s_t, type){
-#   
-#   # Construct Linear Combination
-#   H_s = (1 - s_t)*H_b + s_t*H_p 
-#   
-#   # Eigenvalue
-#   eigen_info = H_s %>% eigen()
-#   
-#   # Extract eigenvalue
-#   if (type == "ground") {
-#     eigen_info$values %>% sort() %>% nth(1)
-#   } else if (type == "excited") {
-#     eigen_info$values %>% sort() %>% nth(2)
-#   }
-# }
-# 
-# 
-# X_state = X %x% diag(2)
-# 
-# #H_b = (0.5*(diag(2*2) - X_state))*2
-# 
-# 
-# # 
-# # d_time %>% 
-# #   mutate(
-# #     ground = map2_dbl(s, "ground", find_state),
-# #     excited = map2_dbl(s, "excited", find_state)
-# #   ) %>% 
-# #   gather(state, val, -s) %>% 
-# #   ggplot(aes(x = s, y = val, col = state)) +
-# #   geom_line() + 
-# #   theme_minimal()
-# # 
-# # 
-# # d_time
-# 

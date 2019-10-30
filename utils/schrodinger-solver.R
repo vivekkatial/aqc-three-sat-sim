@@ -39,7 +39,7 @@ solve_schrodinger_analytically = function(d_hamiltonian, params, t, phi_init){
     Reduce("+",.)/2
   
   # Compute iHt
-  ham_p <- -1i* ham_t *params$t_step
+  ham_p <- -1i* ham_t*params$t_step
   
   # Calculate the state vector by e^A phi
   state_vec <- matexp(ham_p) %*% phi_init
