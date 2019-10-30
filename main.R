@@ -51,14 +51,6 @@ loginfo("Clauses generated, setting up time evolution system")
 
 d_hamils <- generate_time_evolving_system(d_clauses, params$build_hamiltonians$params)
 
-loginfo("Time Evolution Setup Complete, Plotting Energy Gap")
-
-d_hamils %>% 
-  select(-hamiltonian) %>% 
-  gather(var,n, -t) %>% 
-  ggplot(aes(x = t, y = n, col = var)) + 
-  geom_line() + 
-  theme_classic()
 
 # Solving Schrödingers Equation -------------------------------------------
 
@@ -66,29 +58,25 @@ loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
 phi_T <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
 
 loginfo("Solved system for T='%s'", params$build_hamiltonians$params$time_T)
-loginfo("Generating PDF across amplitudes")
 
 
 # Generate PDF ------------------------------------------------------------
 
+loginfo("Generating PDF across amplitudes")
 state_pdf <- generate_pdf(phi_T)
-state_pdf
-
 
 # Plotting PDF ------------------------------------------------------------
 
+loginfo("Plotting PDF object")
 p_state_pdf <- state_pdf %>% 
-  mutate(type = ifelse(abs(p - max(p)) < 1e-13, "max", "other")) %>%
-  ggplot(aes(x = bit_str, y = p, group = 1, fill = type)) +
-  geom_col(alpha = 0.6) +
-  labs(
-    x = "State "
-  ) +
-  theme_classic() +
-  #stat_smooth(geom = "area", span = 0.4, method = "glm", alpha = 0.4) +
-  theme(
-    axis.text.x = element_text(angle = 90, hjust = 1)
-  )
+  plot_state_pdf()
+
+
+# Plotting Energy Gap -----------------------------------------------------
+
+loginfo("Plotting Energy Gap")
+p_energy_gap <- d_hamils %>% 
+  plot_energy_gap()
 
 
 # Print H_b and H_p -------------------------------------------------------
@@ -126,3 +114,4 @@ h_0_decomp$vectors %>%
     index = paste0("z_", 1:n())
   ) %>% 
   select(index, assignment)
+

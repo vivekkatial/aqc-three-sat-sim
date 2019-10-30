@@ -21,6 +21,9 @@ build_hamiltonians:
     time_T: "{{time_T}}"
     t_step: "{{t_step}}"
     num_energy_levels: "{{num_energy_levels}}"
+
+state_evolution:
+  source: "src/evolve-quantum-system.R"
   
 results:
-  source: "src/plot-energy-gap.R"
+  source: "src/plotting-helpers.R"
