@@ -17,9 +17,12 @@ source("src/build-hamiltonians/generate-problem-ham.R")
 #' Function to generate the time evolving system
 generate_time_evolving_system = function(d_clauses, ...){
 
-  
+#  browser()  
   # Unpack parameters
   params = list(...)[[1]]
+  
+  # Conver parameters to be numeric
+  params = lapply(params, as.numeric)
   
   # Build problem hamiltonian
   H_p = construct_ham_problem(params$n_qubits, d_clauses)
