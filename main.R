@@ -12,6 +12,7 @@ import_library = function(lib_name){
 import_library("logging")
 import_library("tidyverse")
 import_library("yaml")
+import_library("complexplus")
 
 # Source Utils
 source("utils/exp-utils.R")
@@ -21,7 +22,7 @@ source("utils/exp-utils.R")
 
 basicConfig()
 
-exp_param_file <- "params/params_template.yml"
+exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T10__num_energy_levels4.yml"
 #exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
@@ -30,6 +31,7 @@ params <- extract_params(exp_param_file)
 
 # Source in all scripts
 source_exp_scripts(params)
+source_exp_utils(params)
 
 # Set Seed
 loginfo("Setting Experiments Random Seed to %s", params$experiment$seed)
@@ -49,14 +51,32 @@ loginfo("Clauses generated, setting up time evolution system")
 
 d_hamils <- generate_time_evolving_system(d_clauses, params$build_hamiltonians$params)
 
-loginfo("Time Evolution Setup Complete, Plotting Energy Gap")
 
-d_hamils %>% 
-  select(-hamiltonian) %>% 
-  gather(var,n, -t) %>% 
-  ggplot(aes(x = t, y = n, col = var)) + 
-  geom_line() + 
-  theme_classic()
+# Solving Schrödingers Equation -------------------------------------------
+
+loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
+phi_T <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
+
+loginfo("Solved system for T='%s'", params$build_hamiltonians$params$time_T)
+
+
+# Generate PDF ------------------------------------------------------------
+
+loginfo("Generating PDF across amplitudes")
+state_pdf <- generate_pdf(phi_T)
+
+# Plotting PDF ------------------------------------------------------------
+
+loginfo("Plotting PDF object")
+p_state_pdf <- state_pdf %>% 
+  plot_state_pdf()
+
+
+# Plotting Energy Gap -----------------------------------------------------
+
+loginfo("Plotting Energy Gap")
+p_energy_gap <- d_hamils %>% 
+  plot_energy_gap()
 
 
 # Print H_b and H_p -------------------------------------------------------
@@ -94,3 +114,4 @@ h_0_decomp$vectors %>%
     index = paste0("z_", 1:n())
   ) %>% 
   select(index, assignment)
+

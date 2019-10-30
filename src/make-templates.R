@@ -40,11 +40,22 @@ make_parameter_filename = function(...){
 
 make_parameter_file = function(...){
   
-  # TODO: Check that all parameters in param_spec are also present in param template!
-  
   # Unpack parameters 
   params <- list(...)
   parameter_file = param_template
+  
+  # Check that all parameters in param_spec are also present in param template!
+  spec_params <- params %>% 
+    names()
+  
+  template_params <- param_template %>% 
+    str_extract_all(., "\\{\\{.*\\}\\}") %>% 
+    unlist() %>% unique() %>% 
+    str_remove_all("\\{|\\}")
+  
+  if (spec_params %in% template_params %>% sum() != length(spec_params)) {
+    stop(printf("Parameters '%s' not in template file", setdiff(spec_params, template_params)))
+  }
   
   # Read template file
   for (param in names(params)) {
@@ -65,7 +76,10 @@ make_parameter_file = function(...){
 #' @param 
 .write_parameter_file = function(parameter_file_name, parameter_content){
   
-  # TODO: Check if all necessary folders are present!
+  # Check if all necessary folders are present!
+  if (!dir.exists("params/ready")) {
+    stop("Directory 'params/ready/' not  found.")
+  }
   
   # Construct filename
   file_name <- file.path("params", "ready",  parameter_file_name)
@@ -77,6 +91,36 @@ make_parameter_file = function(...){
 
 
 
+
+
+
+# FILTER GRID FOR IMPOSSIBLE VALUES ---------------------------------
+
+#' The rules we have are the following:
+#' 1. Number of Qubits > k (number of clauses)
+#' 2. Number of Qubits > N_SAT (length of satisfiability clause)
+#' 
+#' I have written a function apply_experiment_rules() which  will
+#' act on the parameter grid, this will  ensure that redundant experiments don't occur
+
+#' This  function applies the rules outlined above
+#' @param param_grid Parameter grid dataframe
+#' @return The same grid with invalid row items removed
+apply_experiment_rules <- function(param_grid){
+  
+  if ( FALSE %in%  (c("parameter_filename", "parameter_file_content") %in% names(param_grid))) {
+    stop("Ensure parameter grid is  valid")
+  }
+  
+  # Apply rules specific to this experiment
+  param_grid %>% 
+    filter(
+      n_qubits > n_sat,
+      n_qubits > k
+      )
+}
+
+
 # Build Grid --------------------------------------------------------------
 
 param_grid <- param_spec %>% 
@@ -84,7 +128,8 @@ param_grid <- param_spec %>%
   mutate(
     parameter_filename         = pmap_chr(., make_parameter_filename),
     parameter_file_content     = pmap_chr(., make_parameter_file)
-  )
+  ) %>% 
+  apply_experiment_rules()
 
 #  Write out  to  files
 mapply(

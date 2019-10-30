@@ -34,6 +34,21 @@ source_exp_scripts <- function(params){
   }
 }
 
+source_exp_utils <- function(params){
+  for (i in params$experiment$utils){
+    # Print message
+    loginfo("Sourcing Utility Script: %s", i)
+    
+    # Load scripts
+    tryCatch(
+      source(i),
+      error = function(e){
+        logerror("Unable to source utility script file '%s' - %s", i, e)
+      }
+    )
+  }
+}
+
 # Convert integer to bit
 convert_int_to_bit = function(int){
   
