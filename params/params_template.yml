@@ -3,6 +3,9 @@ experiment:
   author: "vivek"
   tracking-uri: "http://localhost:5000"
   seed: 1032918
+  utils: 
+    - "utils/schrodinger-solver.R"
+    - "utils/define-pauli-matrices.R"
 
 initialise:
   source: "src/generate-instances.R"
@@ -15,8 +18,12 @@ build_hamiltonians:
   source: "src/build-hamiltonians/construct-time-evolution.R"
   params:
     n_qubits: "{{n_qubits}}"
+    time_T: "{{time_T}}"
     t_step: "{{t_step}}"
     num_energy_levels: "{{num_energy_levels}}"
+
+state_evolution:
+  source: "src/evolve-quantum-system.R"
   
 results:
-  source: "src/plot-energy-gap.R"
+  source: "src/plotting-helpers.R"
