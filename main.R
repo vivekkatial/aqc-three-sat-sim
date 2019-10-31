@@ -21,8 +21,9 @@ source("utils/exp-utils.R")
 # Initial Setup -----------------------------------------------------------
 
 basicConfig()
+options(warn=-1)
 
-exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T10__num_energy_levels4.yml"
+exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
 #exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
@@ -83,35 +84,36 @@ p_energy_gap <- d_hamils %>%
 
 loginfo("Outputting Problem Hamiltonian")
 
-d_hamils %>% 
-  slice(n()) %>% 
-  pull(hamiltonian) %>% 
-  as.data.frame() %>% 
-  as_tibble() %>% 
-  mutate(
-    ind = 0:(n()-1),
-    bin = map_dbl(ind, convert_int_to_bit)
-    ) %>% 
-  rename_all(funs(str_replace(., "X", "z_")))
+# d_hamils %>% 
+#   slice(n()) %>% 
+#   pull(hamiltonian) %>% 
+#   as.data.frame() %>% 
+#   as_tibble() %>% 
+#   mutate(
+#     ind = 0:(n()-1),
+#     bin = map_dbl(ind, convert_int_to_bit)
+#     ) %>% 
+#   rename_all(funs(str_replace(., "X", "z_")))
 
 loginfo("Experiment Complete")
 
 
-h_0_decomp <- d_hamils %>% 
-  slice(n()) %>% 
-  pull(hamiltonian) %>% 
-  as.data.frame() %>% 
-  as_tibble() %>% 
-  as.matrix() %>% 
-  eigen()
+# h_0_decomp <- d_hamils %>% 
+#   slice(n()) %>% 
+#   pull(hamiltonian) %>% 
+#   as.data.frame() %>% 
+#   as_tibble() %>% 
+#   as.matrix() %>% 
+#   eigen()
 
 loginfo("Satisfying Argument as follows:")
 
-h_0_decomp$vectors %>% 
-  as_tibble() %>% 
-  select(assignment = length(.)) %>% 
-  mutate(
-    index = paste0("z_", 1:n())
-  ) %>% 
-  select(index, assignment)
+# h_0_decomp$vectors %>% 
+#   as_tibble() %>% 
+#   select(assignment = length(.)) %>% 
+#   mutate(
+#     index = paste0("z_", 1:n())
+#   ) %>% 
+#   select(index, assignment)
 
+loginfo("Experiment Complete!")

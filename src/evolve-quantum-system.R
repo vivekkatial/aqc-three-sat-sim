@@ -19,7 +19,7 @@ evolve_quantum_system = function(d_hamils, ...){
   
   # browser()
   
-  for (t in seq(0,1, by = params$t_step)) {
+  for (t in seq(0, params$time_T, by = params$t_step)) {
     
     # Evaluate first initial step
     if (t == 0) {
