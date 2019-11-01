@@ -11,9 +11,6 @@ From: ubuntu:16.04
 %apprun Rscript
   exec Rscript "${@}"
 
-%runscript
-  exec R "${@}"
-
 %post
   # Software versions
   export R_VERSION=3.6.1
@@ -55,5 +52,25 @@ From: ubuntu:16.04
   mkdir -p /library
   echo "R_LIBS_SITE=/library:\${R_LIBS_SITE}" >> /usr/lib/R/etc/Renviron.site
 
+  # Install required R packages
+  R --slave -e 'install.packages("devtools", repos="https://cloud.r-project.org/")'
+  R --slave -e 'install.packages("tidyverse", repos="https://cloud.r-project.org/")'
+
   # Clean up
   rm -rf /var/lib/apt/lists/*
+
+  # Clone the git repository for this project
+  git clone https://github.com/vivekkatial/aqc-three-sat-sim.git
+
+%runscript
+  
+  # Go into folder
+  exec cd aqc-three-sat-sim
+
+  # execute script
+  exec Rscript src/make-templates.R
+
+  # make template files
+  echo "Completed making template files"
+
+  exec ls params/ready/
