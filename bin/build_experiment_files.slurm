@@ -13,8 +13,7 @@
 #SBATCH --mail-user=vkatial@student.unimelb.edu.au
 #SBATCH --mail-type=ALL
 
-# Load the environment variables for R
-module load R/3.5.0-spartan_gcc-6.2.0 
+# Load in Singularity Model
 module load Singularity/3.2.0-spartan_gcc-6.2.0
 
 # The command to actually run the job
