@@ -17,5 +17,5 @@
 module load Singularity/3.2.0-spartan_gcc-6.2.0
 
 # The command to actually run the job
-singularity exec vsoch-hello-world-master.simg echo "Hello from inside my container!" > output.txt
+singularity exec portable-image.img  echo "Hello from inside my container!" > output.txt
 
