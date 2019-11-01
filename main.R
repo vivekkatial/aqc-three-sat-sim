@@ -60,6 +60,9 @@ phi_T <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
 
 loginfo("Solved system for T='%s'", params$build_hamiltonians$params$time_T)
 
+# Solving for Entanglement
+d_entanglement <- calculate_system_entanglement(d_hamils)
+
 
 # Generate PDF ------------------------------------------------------------
 
@@ -78,42 +81,5 @@ p_state_pdf <- state_pdf %>%
 loginfo("Plotting Energy Gap")
 p_energy_gap <- d_hamils %>% 
   plot_energy_gap()
-
-
-# Print H_b and H_p -------------------------------------------------------
-
-loginfo("Outputting Problem Hamiltonian")
-
-# d_hamils %>% 
-#   slice(n()) %>% 
-#   pull(hamiltonian) %>% 
-#   as.data.frame() %>% 
-#   as_tibble() %>% 
-#   mutate(
-#     ind = 0:(n()-1),
-#     bin = map_dbl(ind, convert_int_to_bit)
-#     ) %>% 
-#   rename_all(funs(str_replace(., "X", "z_")))
-
-loginfo("Experiment Complete")
-
-
-# h_0_decomp <- d_hamils %>% 
-#   slice(n()) %>% 
-#   pull(hamiltonian) %>% 
-#   as.data.frame() %>% 
-#   as_tibble() %>% 
-#   as.matrix() %>% 
-#   eigen()
-
-loginfo("Satisfying Argument as follows:")
-
-# h_0_decomp$vectors %>% 
-#   as_tibble() %>% 
-#   select(assignment = length(.)) %>% 
-#   mutate(
-#     index = paste0("z_", 1:n())
-#   ) %>% 
-#   select(index, assignment)
 
 loginfo("Experiment Complete!")

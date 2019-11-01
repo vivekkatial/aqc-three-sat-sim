@@ -50,3 +50,19 @@ evolve_quantum_system = function(d_hamils, ...){
   
   phi_T
 }
+
+
+#' This function evaluates the entanglement in the system at all states
+#' @param d_hamils
+#' @param ... List options
+#' @return A dataframe consisting of the entanglement in the system
+calculate_system_entanglement = function(d_hamils, ...){
+  browser()
+}
+
+#' This function evaluates the entanglement on a given Hamiltonian
+#' @param hamiltonian The hamiltonian
+#' @return A value for entanglement
+calculate_entanglement = function(hamiltonian){
+  
+}
