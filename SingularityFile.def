@@ -25,13 +25,22 @@ From: ubuntu:16.04
   apt-get install git
   git --version
 
-
   # Configure default locale
   echo "en_US.UTF-8 UTF-8" >> /etc/locale.gen
   locale-gen en_US.utf8
   /usr/sbin/update-locale LANG=en_US.UTF-8
   export LC_ALL=en_US.UTF-8
   export LANG=en_US.UTF-8
+
+  ####################################################
+  # AWS Installation
+  ####################################################
+  apt-get update
+  apt-get install awscli
+
+  ####################################################
+  # R Installation
+  ####################################################
 
   # Install R
   echo "deb http://cran.r-project.org/bin/linux/ubuntu xenial-cran35/" > /etc/apt/sources.list.d/r.list
@@ -65,9 +74,16 @@ From: ubuntu:16.04
   rm -rf /var/lib/apt/lists/*
 
 %runscript
+
+  echo "Container was created $NOW"
+  echo "Arguments received: $*"
+  exec echo "$@"
   
   # Go into folder
-  exec cd aqc-three-sat-sim
+  cd aqc-three-sat-sim
+
+  # Upload dummy file to AWS
+  aws s3 cp Rplots.pdf  s3://testBucket/test.pdf --endpoint-url https://objects.storage.unimelb.edu.au
 
   # execute script
   exec Rscript src/make-templates.R
