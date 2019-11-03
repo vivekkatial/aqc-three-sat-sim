@@ -8,4 +8,7 @@ This ensures reproducibility and package management of each experiment.
 
 The Singularity container is defined through definition file in the root directory.
 
-This experiment is designed to be used in conjunction with **ez-experimentr** 
+This experiment is designed to be used in conjunction with **ez-experimentr**
+
+## Author(s)
+- Vivek Katial 
