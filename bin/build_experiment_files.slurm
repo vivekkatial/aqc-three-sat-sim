@@ -17,5 +17,5 @@
 module load Singularity/3.2.0-spartan_gcc-6.2.0
 
 # The command to actually run the job
-singularity exec portable-image.img 
+singularity run portable-image.img
 

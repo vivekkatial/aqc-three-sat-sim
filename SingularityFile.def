@@ -80,9 +80,6 @@ From: ubuntu:16.04
   echo "Arguments received: $*"
   exec echo "$@"
   
-  # Go into folder
-  cd aqc-three-sat-sim
-
   # Upload dummy file to AWS
   aws s3 cp Rplots.pdf  s3://testBucket/test.pdf --endpoint-url https://objects.storage.unimelb.edu.au
 
