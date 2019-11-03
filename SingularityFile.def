@@ -37,7 +37,8 @@ From: ubuntu:16.04
   # AWS Installation
   ####################################################
   apt-get update
-  apt-get install awscli
+  apt-get install -y --no-install-recommends --allow-unauthenticated \
+    awscli
 
   ####################################################
   # R Installation
