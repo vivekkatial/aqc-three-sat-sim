@@ -78,7 +78,8 @@ make_parameter_file = function(...){
   
   # Check if all necessary folders are present!
   if (!dir.exists("params/ready")) {
-    stop("Directory 'params/ready/' not  found.")
+    cat("WARNING: Directory 'params/ready/' not  found.")
+    dir.create("params/ready/")
   }
   
   # Construct filename
