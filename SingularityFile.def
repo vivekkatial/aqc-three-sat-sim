@@ -1,5 +1,5 @@
 BootStrap: docker
-From: continuumio/miniconda
+From: python:3.6
 
 %labels
   Maintainer Vivek Katial
