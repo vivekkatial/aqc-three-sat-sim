@@ -1,5 +1,5 @@
 BootStrap: docker
-From: ubuntu:16.04
+From: continuumio/miniconda
 
 %labels
   Maintainer Vivek Katial
@@ -30,39 +30,22 @@ From: ubuntu:16.04
   export LANG=en_US.UTF-8
 
   ####################################################
-  # Python Installation
+  # MLFlow Installation
   ####################################################
 
-  export PATH=/opt/conda/bin:$PATH
-  apt-get update --fix-missing && apt-get install -y --no-install-recommends --allow-unauthenticated wget bzip2 ca-certificates \
-    libglib2.0-0 libxext6 libsm6 libxrender1 \
-    git mercurial subversion
+  export MLFLOW_VERSION=1.4.0
 
-  wget --quiet https://repo.anaconda.com/miniconda/Miniconda2-4.5.11-Linux-x86_64.sh -O ~/miniconda.sh && \
-    /bin/bash ~/miniconda.sh -b -p /opt/conda && \
-    rm ~/miniconda.sh && \
-    ln -s /opt/conda/etc/profile.d/conda.sh /etc/profile.d/conda.sh && \
-    echo ". /opt/conda/etc/profile.d/conda.sh" >> ~/.bashrc && \
-    echo "conda activate base" >> ~/.bashrc
+  # Install mlflow and  dependencies
+  pip install mlflow==$MLFLOW_VERSION \
+    scikit-learn \
+    boto3 \
+    sqlalchemy \
+    psycopg2
 
-  apt-get install -y curl grep sed dpkg && \
-    TINI_VERSION=`curl https://github.com/krallin/tini/releases/latest | grep -o "/v.*\"" | sed 's:^..\(.*\).$:\1:'` && \
-    curl -L "https://github.com/krallin/tini/releases/download/v${TINI_VERSION}/tini_${TINI_VERSION}.deb" > tini.deb && \
-    dpkg -i tini.deb && \
-    rm tini.deb && \
-    apt-get clean
-
-  pip install mlflow>=1.0 \
-    && pip install azure-storage==0.36.0 \
-    && pip install numpy==1.14.3 \
-    && pip install scipy \
-    && pip install pandas==0.22.0 \
-    && pip install scikit-learn==0.19.1 \
-    && pip install cloudpickle
-    
   ####################################################
   # AWS Installation
   ####################################################
+
   apt-get update
   apt-get install -y --no-install-recommends --allow-unauthenticated \
     awscli
