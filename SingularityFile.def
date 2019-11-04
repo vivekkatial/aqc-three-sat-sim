@@ -16,7 +16,7 @@ From: continuumio/miniconda
   export R_VERSION=3.6.1
 
   # Get dependencies
-  apt-get update
+  apt-get update && apt-get install -y gnupg2
   apt-key update
   apt-get install -y --no-install-recommends \
     locales \
