@@ -13,22 +13,40 @@ import_library("logging")
 import_library("tidyverse")
 import_library("yaml")
 import_library("complexplus")
+import_library("mlflow")
 
 # Source Utils
 source("utils/exp-utils.R")
 
 
-# Initial Setup -----------------------------------------------------------
+# Initial Experiment Setup -----------------------------------------------------------
 
 basicConfig()
 options(warn=-1)
 
-# exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
-exp_param_file <- commandArgs(trailingOnly = TRUE)
+exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
+# exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
 loginfo("Starting Experiment with conifguration: '%s'", exp_param_file)
 params <- extract_params(exp_param_file)
+
+# Setup MLflow
+loginfo("Setting up MLFlow")
+
+mlflow_set_tracking_uri(params$experiment$`tracking-uri`)
+
+# Start mlflow run
+mlflow_start_run(
+#  run_uuid = as.character(exp_param_file)#,
+#  experiment_id = as.character(params$experiment$name),
+#  source_version = as.character(system("git rev-parse HEAD", intern=TRUE))
+)
+
+mlflow_log_artifact(exp_param_file)
+mlflow_log_param("foo", 42)
+
+mlflow_end_run()
 
 # Source in all scripts
 source_exp_scripts(params)

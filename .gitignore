@@ -6,3 +6,4 @@ packrat/lib*/
 params/*
 *.img
 **.DS_Store
+mlruns/*
