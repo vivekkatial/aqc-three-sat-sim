@@ -23,8 +23,8 @@ source("utils/exp-utils.R")
 basicConfig()
 options(warn=-1)
 
-exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
-#exp_param_file <- commandArgs(trailingOnly = TRUE)
+# exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
+exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
 loginfo("Starting Experiment with conifguration: '%s'", exp_param_file)

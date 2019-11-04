@@ -4,3 +4,5 @@
 .Ruserdata
 packrat/lib*/
 params/*
+*.img
+**.DS_Store
