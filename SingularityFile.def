@@ -5,6 +5,10 @@ From: python:3.6
   Maintainer Vivek Katial
   R_Version 3.6.1
 
+%environment
+  MLFLOW_S3_ENDPOINT_URL=https://objects.storage.unimelb.edu.au
+  export MLFLOW_S3_ENDPOINT_URL
+
 %apprun R
   exec R "${@}"
 
