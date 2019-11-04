@@ -12,6 +12,9 @@ From: python:3.6
   exec Rscript "main.R ${@}"
 
 %post
+  # Print image info
+  cat /etc/os-release
+  
   # Software versions
   export R_VERSION=3.6.1
 
