@@ -81,7 +81,6 @@ From: python:3.6
   R --slave -e 'install.packages("complexplus", repos="https://cloud.r-project.org/")'
   R --slave -e 'install.packages("logging", repos="https://cloud.r-project.org/")'
   R --slave -e 'install.packages("mlflow", repos="https://cloud.r-project.org/")'
-  R --slave -e 'mlflow::install_mlflow()'
 
   # Clean up
   rm -rf /var/lib/apt/lists/*
