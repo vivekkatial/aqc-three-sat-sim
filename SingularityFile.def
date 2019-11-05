@@ -99,7 +99,7 @@ From: python:3.6
   echo "Arguments received: $*"
   
   # Upload dummy file to AWS
-  aws s3 cp Rplots.pdf  s3://testBucket/test.pdf --endpoint-url https://objects.storage.unimelb.edu.au
+  aws s3 cp Rplots.pdf  s3://testBucket/test.pdf 
 
   # execute script
   Rscript src/make-templates.R
@@ -109,5 +109,4 @@ From: python:3.6
 
   # Migrate template files onto remote storage
   echo "Moving template files from CONTAINER to AWS S3 STORAGE"
-  aws s3 sync --exclude="*" --include="*.yml" s3://testBucket/experiments/aqc-three-sat-sim/ready/ params/ready/
-  # aws s3 cp params/ready/* s3://testBucket/experiments/aqc-three-sat-sim/ready/
+  aws s3 sync --exclude="*" --include="*.yml" s3://testBucket/experiments/aqc-three-sat-sim/ready/ params/ready/ --endpoint-url https://objects.storage.unimelb.edu.au
