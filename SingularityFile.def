@@ -6,14 +6,19 @@ From: python:3.6
   R_Version 3.6.1
 
 %environment
+  # Declare experiment environment variables
+  EXPERIMENT_NAME=aqc-three-sat-sim
   # Declare mlflow environment variables
   MLFLOW_S3_ENDPOINT_URL=https://objects.storage.unimelb.edu.au
   MLFLOW_PYTHON_BIN=/usr/local/bin/python
   MLFLOW_BIN=/usr/local/bin/mlflow
+  S3_BUCKET=s3://testBucket
   # Export env vars
-  export MLFLOW_S3_ENDPOINT_URL \
+  export EXPERIMENT_NAME \
+    MLFLOW_S3_ENDPOINT_URL \
     MLFLOW_PYTHON_BIN \
-    MLFLOW_BIN
+    MLFLOW_BIN \
+    S3_BUCKET
 
 %apprun R
   exec R "${@}"
@@ -99,7 +104,7 @@ From: python:3.6
   echo "Arguments received: $*"
   
   # Upload dummy file to AWS
-  aws s3 cp Rplots.pdf  s3://testBucket/test.pdf --endpoint-url https://objects.storage.unimelb.edu.au
+  aws s3 cp Rplots.pdf  $S3_BUCKET/test.pdf --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
 
   # execute script
   Rscript src/make-templates.R
@@ -109,5 +114,5 @@ From: python:3.6
 
   # Migrate template files onto remote storage
   echo "Moving template files from CONTAINER to AWS S3 STORAGE"
-  aws s3 sync --exclude="*" --include="*.yml" s3://testBucket/experiments/aqc-three-sat-sim/ready/ params/ready/
-  # aws s3 cp params/ready/* s3://testBucket/experiments/aqc-three-sat-sim/ready/
+  aws s3 mv params/ready/ $S3_BUCKET/$EXPERIMENT_NAME/ready/ --recursive --exclude "*" --include "*.yml" --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
+
