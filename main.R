@@ -13,71 +13,129 @@ import_library("logging")
 import_library("tidyverse")
 import_library("yaml")
 import_library("complexplus")
+import_library("mlflow")
 
 # Source Utils
 source("utils/exp-utils.R")
 
 
-# Initial Setup -----------------------------------------------------------
+# Initial Experiment Setup -----------------------------------------------------------
 
 basicConfig()
 options(warn=-1)
 
-# exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
-exp_param_file <- commandArgs(trailingOnly = TRUE)
+exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
+# exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
 loginfo("Starting Experiment with conifguration: '%s'", exp_param_file)
 params <- extract_params(exp_param_file)
 
-# Source in all scripts
-source_exp_scripts(params)
-source_exp_utils(params)
+# Setup MLflow
+loginfo("Setting up MLFlow")
 
-# Set Seed
-loginfo("Setting Experiments Random Seed to %s", params$experiment$seed)
-set.seed(params$experiment$seed)
+# Initialise MLFlow Client
+loginfo("Initialising MLFlow with tracking URI: '%s'", params$experiment$`tracking-uri`)
+mlflow_set_tracking_uri(params$experiment$`tracking-uri`)
 
-# Generate Clauses --------------------------------------------------------
+# Get commit hash
+mlflow_run_commit_hash <- system('git rev-parse --verify HEAD', intern = T)
+loginfo("MLFlow is running with commit hash: '%s'", mlflow_run_commit_hash)
 
-loginfo("Generating upto 'k=%s' clauses", params$initialise$params$k)
+# Check if experiment already  present (if not create one)
+if (!(params$experiment$name %in% mlflow:::mlflow_list_experiments()$name)) {
+  logwarn("Experiment %s not found, creating...", params$experiment$name)
+  mlflow::mlflow_create_experiment(name = params$experiment$name)
+  mlflow_set_experiment(params$experiment$name)
+} else {
+  loginfo("Experiment %s already present, running run with configuration %s", params$experiment$name, exp_param_file)
+  mlflow_set_experiment(params$experiment$name)
+  
+}
 
-# Setting system up
-d_clauses <- generate_clauses(params$initialise$params)
+# Start mlflow run
+loginfo("Starting Run")
+with(mlflow_start_run(), {
+  
+  loginfo("Logging parameter file: '%s'", exp_param_file)
+  mlflow_log_artifact(exp_param_file)
+  mlflow_log_param("file_name", exp_param_file)
+  mlflow_log_param("commit_hash", mlflow_run_commit_hash)
+  
+  # Source in all scripts
+  source_exp_scripts(params)
+  source_exp_utils(params)
+  
+  # Set Seed
+  loginfo("Setting Experiments Random Seed to %s", params$experiment$seed)
+  set.seed(params$experiment$seed)
+  
+  # Generate Clauses --------------------------------------------------------
+  
+  loginfo("Generating upto 'k=%s' clauses", params$initialise$params$k)
+  
+  # Parameters for clause
+  clause_params <- params$initialise$params %>% 
+    flatten() %>% 
+    as_data_frame() %>% 
+    gather(key, value)
+  
+  # Logging clause parameters
+  mlflow_log_batch(params = clause_params)
+  
+  # Setting system up
+  d_clauses <- generate_clauses(params$initialise$params)
+  
+  
+  # Generate Time Evolution -------------------------------------------------
+  
+  loginfo("Clauses generated, setting up time evolution system")
+  
+  quantum_params <- params$build_hamiltonians$params %>% 
+    flatten() %>% 
+    as_data_frame() %>% 
+    gather(key, value)
+  
+  loginfo("Logging Quantum System Parameters")
+  mlflow_log_batch(params = quantum_params)
+  
+  d_hamils <- generate_time_evolving_system(d_clauses, params$build_hamiltonians$params)
+  
+  
+  # Solving Schrödingers Equation -------------------------------------------
+  
+  loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
+  phi_T <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
+  
+  loginfo("Solved system for T='%s'", params$build_hamiltonians$params$time_T)
+  
+  # Solving for Entanglement
+  # d_entanglement <- calculate_system_entanglement(d_hamils)
+  
+  
+  # Generate PDF ------------------------------------------------------------
+  
+  loginfo("Generating PDF across amplitudes")
+  state_pdf <- generate_pdf(phi_T)
+  
+  # Plotting PDF ------------------------------------------------------------
+  
+  loginfo("Plotting PDF object")
+  p_state_pdf <- state_pdf %>% 
+    plot_state_pdf()
+  
+  
+  # Plotting Energy Gap -----------------------------------------------------
+  
+  loginfo("Plotting Energy Gap")
+  p_energy_gap <- d_hamils %>% 
+    plot_energy_gap()
+  
+  
+  # Ending Experiment -------------------------------------------------------
+  loginfo("Experiment Complete!")
+  
+})
 
 
-# Generate Time Evolution -------------------------------------------------
 
-loginfo("Clauses generated, setting up time evolution system")
-
-d_hamils <- generate_time_evolving_system(d_clauses, params$build_hamiltonians$params)
-
-
-# Solving Schrödingers Equation -------------------------------------------
-
-loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
-phi_T <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
-
-loginfo("Solved system for T='%s'", params$build_hamiltonians$params$time_T)
-
-
-# Generate PDF ------------------------------------------------------------
-
-loginfo("Generating PDF across amplitudes")
-state_pdf <- generate_pdf(phi_T)
-
-# Plotting PDF ------------------------------------------------------------
-
-loginfo("Plotting PDF object")
-p_state_pdf <- state_pdf %>% 
-  plot_state_pdf()
-
-
-# Plotting Energy Gap -----------------------------------------------------
-
-loginfo("Plotting Energy Gap")
-p_energy_gap <- d_hamils %>% 
-  plot_energy_gap()
-
-
-loginfo("Experiment Complete!")
