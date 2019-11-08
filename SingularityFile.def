@@ -91,11 +91,8 @@ From: python:3.6
   echo "R_LIBS_SITE=/library:\${R_LIBS_SITE}" >> /usr/lib/R/etc/Renviron.site
 
   # Install required R packages
-  R --slave -e 'install.packages("tidyverse", repos="https://cloud.r-project.org/")'
-  R --slave -e 'install.packages("yaml", repos="https://cloud.r-project.org/")'
-  R --slave -e 'install.packages("complexplus", repos="https://cloud.r-project.org/")'
-  R --slave -e 'install.packages("logging", repos="https://cloud.r-project.org/")'
-  R --slave -e 'install.packages("mlflow", repos="https://cloud.r-project.org/")'
+  R --slave -e 'install.packages("packrat", repos="https://cloud.r-project.org/")'
+  Rscript -e 'packrat::restore()'
 
   # Clean up
   rm -rf /var/lib/apt/lists/*
