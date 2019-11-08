@@ -1,9 +1,19 @@
 BootStrap: docker
-From: continuumio/miniconda
+From: python:3.6
 
 %labels
   Maintainer Vivek Katial
   R_Version 3.6.1
+
+%environment
+  # Declare mlflow environment variables
+  MLFLOW_S3_ENDPOINT_URL=https://objects.storage.unimelb.edu.au
+  MLFLOW_PYTHON_BIN=/usr/local/bin/python
+  MLFLOW_BIN=/usr/local/bin/mlflow
+  # Export env vars
+  export MLFLOW_S3_ENDPOINT_URL \
+    MLFLOW_PYTHON_BIN \
+    MLFLOW_BIN
 
 %apprun R
   exec R "${@}"
@@ -12,6 +22,9 @@ From: continuumio/miniconda
   exec Rscript "main.R ${@}"
 
 %post
+  # Print image info
+  cat /etc/os-release
+  
   # Software versions
   export R_VERSION=3.6.1
 
@@ -55,21 +68,15 @@ From: continuumio/miniconda
   ####################################################
 
   # Install R
-  echo "deb http://cran.r-project.org/bin/linux/ubuntu xenial-cran35/" > /etc/apt/sources.list.d/r.list
-  apt-key adv --keyserver keyserver.ubuntu.com --recv-keys E084DAB9
-  apt-get update
-  apt-get install -y --no-install-recommends --allow-unauthenticated \
-    r-base=${R_VERSION}* \
-    r-base-core=${R_VERSION}* \
-    r-base-dev=${R_VERSION}* \
-    r-recommended=${R_VERSION}* \
-    r-base-html=${R_VERSION}* \
-    r-doc-html=${R_VERSION}* \
-    libcurl4-openssl-dev \
-    libssl-dev \
-    libxml2-dev \
-    libcairo2-dev \
-    libxt-dev \
+  apt install dirmngr --install-recommends
+  apt install -y software-properties-common
+  apt install -y apt-transport-https
+  apt-key adv --keyserver keys.gnupg.net --recv-key 'E19F5F87128899B192B1A2C2AD5F960A256A04AF'
+  add-apt-repository 'deb http://cloud.r-project.org/bin/linux/debian buster-cran35/'
+  apt update
+  apt install -y r-base
+  
+  R --version
 
   # Add a default CRAN mirror
   echo "options(repos = c(CRAN = 'https://cran.rstudio.com/'), download.file.method = 'libcurl')" >> /usr/lib/R/etc/Rprofile.site
@@ -84,7 +91,6 @@ From: continuumio/miniconda
   R --slave -e 'install.packages("complexplus", repos="https://cloud.r-project.org/")'
   R --slave -e 'install.packages("logging", repos="https://cloud.r-project.org/")'
   R --slave -e 'install.packages("mlflow", repos="https://cloud.r-project.org/")'
-  R --slave -e 'mlflow::install_mlflow()'
 
   # Clean up
   rm -rf /var/lib/apt/lists/*
@@ -93,7 +99,7 @@ From: continuumio/miniconda
   echo "Arguments received: $*"
   
   # Upload dummy file to AWS
-  aws s3 cp Rplots.pdf  s3://testBucket/test.pdf --endpoint-url https://objects.storage.unimelb.edu.au
+  aws s3 cp Rplots.pdf  s3://testBucket/test.pdf 
 
   # execute script
   Rscript src/make-templates.R
@@ -103,5 +109,4 @@ From: continuumio/miniconda
 
   # Migrate template files onto remote storage
   echo "Moving template files from CONTAINER to AWS S3 STORAGE"
-  aws s3 sync --exclude="*" --include="*.yml" s3://testBucket/experiments/aqc-three-sat-sim/ready/ params/ready/
-  # aws s3 cp params/ready/* s3://testBucket/experiments/aqc-three-sat-sim/ready/
+  aws s3 sync --exclude="*" --include="*.yml" s3://testBucket/experiments/aqc-three-sat-sim/ready/ params/ready/ --endpoint-url https://objects.storage.unimelb.edu.au
