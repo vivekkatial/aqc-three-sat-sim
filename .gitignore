@@ -52,3 +52,4 @@ params/*
 
 # Mlflow metadata
 mlruns/*
+.Rproj.user
