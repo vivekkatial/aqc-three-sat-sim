@@ -26,7 +26,7 @@ solve_schrodinger_analytically = function(d_hamiltonian, params, t, phi_init){
   t_ind <-  which(abs(d_hamiltonian$t - t) < 1e-12)
   
   if (sum(abs(d_hamiltonian$t - t) < 1e-12) != 1) {
-    browser()
+    logerror("Failed because time step not")
   }
   
   ham_t <- d_hamiltonian %>%
