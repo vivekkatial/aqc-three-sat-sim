@@ -13,7 +13,11 @@
 #' @param params A list containing `n_qubits` and `t_step`
 #' @param t The time at which we're solving schrodingers equation
 #' @param phi_init A state vector to use as the initial state vector
+#' 
 #' @return A state vector corresponding to the state of phi
+#' @export
+#' 
+#' @example TBC...
 solve_schrodinger_analytically = function(d_hamiltonian, params, t, phi_init){
   
   # TODO: CHECK PARAMS
