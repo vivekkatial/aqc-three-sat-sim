@@ -6,10 +6,11 @@
 ###############################################################################
 
 #' This function evolves the system
-#' @param d_hamils A dataframe consisting of the valid  hamiltonina
+#' @param d_hamils A dataframe consisting of a valid  hamiltonian
 #' @param ... A list consisting of the  number of qubits, timestep
 #' @return A state vector phi with  the amplitudes of being in  each quantum state
-evolve_quantum_system = function(d_hamils, ...){
+evolve_quantum_system = function(.t, d_hamils, ...){
+  # browser()
   
   # Unpack parameters
   params = list(...)[[1]]
@@ -17,14 +18,17 @@ evolve_quantum_system = function(d_hamils, ...){
   # Make params numeric
   params = lapply(params, as.numeric)
   
-  # browser()
+  if (.t == 0) {
+    phi_T = rep(1/(2^(params$n_qubits/2)), (2^params$n_qubits))
+    return(phi_T)
+  }
   
-  for (t in seq(0, params$time_T, by = params$t_step)) {
+  
+  for (t in seq(0, .t, by = params$t_step)) {
     
     # Evaluate first initial step
     if (t == 0) {
       # Initialise ground state vector
-      
       loginfo("Initialising State Vector")
       phi_0 <- rep(1/(2^(params$n_qubits/2)), (2^params$n_qubits))
       
@@ -49,20 +53,4 @@ evolve_quantum_system = function(d_hamils, ...){
   }
   
   phi_T
-}
-
-
-#' This function evaluates the entanglement in the system at all states
-#' @param d_hamils
-#' @param ... List options
-#' @return A dataframe consisting of the entanglement in the system
-calculate_system_entanglement = function(d_hamils, ...){
-  browser()
-}
-
-#' This function evaluates the entanglement on a given Hamiltonian
-#' @param hamiltonian The hamiltonian
-#' @return A value for entanglement
-calculate_entanglement = function(hamiltonian){
-  
 }

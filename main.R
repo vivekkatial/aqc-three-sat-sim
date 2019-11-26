@@ -57,6 +57,8 @@ if (!(params$experiment$name %in% mlflow:::mlflow_list_experiments()$name)) {
 loginfo("Starting Run")
 with(mlflow_start_run(), {
   
+  browser()
+  
   loginfo("Logging parameter file: '%s'", exp_param_file)
   mlflow_log_artifact(exp_param_file)
   mlflow_log_param("file_name", exp_param_file)
@@ -105,18 +107,21 @@ with(mlflow_start_run(), {
   # Solving Schrödingers Equation -------------------------------------------
   
   loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
-  phi_T <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
   
+  d_solved_system <- d_hamils %>% 
+    mutate(phi_t = map(t, evolve_quantum_system, d_hamils, params$build_hamiltonians$params)) %>% 
+    mutate(shannon_entropy = map_dbl(phi_t, calculate_entanglement, params$build_hamiltonians$params$n_qubits))
+  
+  # Extract final state
+  phi_T <- d_solved_system[[nrow(d_solved_system), "phi_t"]]
+
   loginfo("Solved system for T='%s'", params$build_hamiltonians$params$time_T)
-  
-  # Solving for Entanglement
-  # d_entanglement <- calculate_system_entanglement(d_hamils)
-  
   
   # Generate PDF ------------------------------------------------------------
   
-  loginfo("Generating PDF across amplitudes")
   state_pdf <- generate_pdf(phi_T)
+  loginfo("Generating PDF across amplitudes")
+
   
   # Plotting PDF ------------------------------------------------------------
   
@@ -136,10 +141,21 @@ with(mlflow_start_run(), {
     plot_energy_gap()
   
   ggsave("tmp/energy_plot.png")
-  
   mlflow_log_artifact("tmp/energy_plot.png")
   
+  
+  # Plotting Entanglement ---------------------------------------------------
 
+  loginfo("Plotting Entanglement")
+  
+  p_entanglement <- d_solved_system %>% 
+    select(t, shannon_entropy) %>% 
+    plot_entanglement()
+
+  ggsave("tmp/entanglement_plot.png")
+  mlflow_log_artifact("tmp/entanglement_plot.png")
+  
+  
   # Minimum Energy Gap ------------------------------------------------------
   
   # Calculate min energy gap
@@ -155,6 +171,5 @@ with(mlflow_start_run(), {
   loginfo("Experiment Complete!")
   
 })
-
 
 

@@ -27,15 +27,13 @@ build_state_matrix = function(.phi, .n_qubits){
 #' @return A list containing number of cols and number of 
 get_dims_density_matrix = function(.n_qubits){
   
-  # TODO: Check for integer value of .n_qubits
-
   # Check if n_qubits odd or even
-  if (n_qubits %% 2 == 0) {
-    n_row = (2^(n_qubits))/2
-    n_col = (2^(n_qubits))/2
+  if (.n_qubits %% 2 == 0) {
+    n_row = (2^(.n_qubits))/2
+    n_col = (2^(.n_qubits))/2
   } else {
-    n_row = (2^n_qubits)/2
-    n_col = (2^(n_qubits - 1))/2
+    n_row = (2^.n_qubits)/2
+    n_col = (2^(.n_qubits - 1))/2
   }
   
   # Return params
@@ -50,7 +48,14 @@ get_dims_density_matrix = function(.n_qubits){
 #' @param .phi state vector
 #' @param .n_qubits Parameter for number of qubits
 #' @return shannon entropy
-calculate_entanglement = function(.phi, .n_qubits){
+calculate_entanglement = function(.phi, .n_qubits=NULL){
+  
+  .n_qubits = as.numeric(.n_qubits)
+  
+  if (is.null(.n_qubits)) {
+    warning("Explicitly specify number of .n_qubits for a faster execution time")
+    .n_qubits = log2(length(.phi))
+  }
   
   # Build State Matrix for phi
   state_matrix = build_state_matrix(.phi, .n_qubits)

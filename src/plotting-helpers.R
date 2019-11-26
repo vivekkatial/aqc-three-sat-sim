@@ -47,3 +47,20 @@ plot_state_pdf = function(state_pdf){
     )
 }
 
+#' This function plots the entanglemnet of a solved system
+#' @param d_solved_system A solved quantum system
+#' @return A ggplot object containing entanglement plot
+plot_entanglement = function(d_solved_system){
+  
+  # Plot Shannon Entropy at the end
+  d_solved_system %>% 
+    select(t, shannon_entropy) %>% 
+    ggplot(aes(x = t, y = shannon_entropy)) + 
+    geom_line() + 
+    theme_classic() + 
+    labs(
+      x = "t",
+      y = "Shannon Entropy"
+    )
+}
+
