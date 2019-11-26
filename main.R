@@ -124,12 +124,31 @@ with(mlflow_start_run(), {
   p_state_pdf <- state_pdf %>% 
     plot_state_pdf()
   
+  ggsave("tmp/final_state_vector_plot.png")
+  
+  mlflow_log_artifact("tmp/final_state_vector_plot.png")
+  
   
   # Plotting Energy Gap -----------------------------------------------------
   
   loginfo("Plotting Energy Gap")
   p_energy_gap <- d_hamils %>% 
     plot_energy_gap()
+  
+  ggsave("tmp/energy_plot.png")
+  
+  mlflow_log_artifact("tmp/energy_plot.png")
+  
+
+  # Minimum Energy Gap ------------------------------------------------------
+  
+  # Calculate min energy gap
+  min_gap <- d_hamils %>% 
+    mutate(gap = n_2 - n_1) %>% 
+    summarise(min = min(gap)) %>% 
+    pull(min)
+
+  mlflow_log_metric("min_energy_gap", min_gap)
   
   
   # Ending Experiment -------------------------------------------------------
