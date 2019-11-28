@@ -9,7 +9,7 @@
 #' @param d_hamils A dataframe consisting of a valid  hamiltonian
 #' @param ... A list consisting of the  number of qubits, timestep
 #' @return A state vector phi with  the amplitudes of being in  each quantum state
-evolve_quantum_system = function(.t, d_hamils, ...){
+evolve_quantum_system = function(d_hamils, ...){
   # browser()
   
   # Unpack parameters
@@ -18,19 +18,34 @@ evolve_quantum_system = function(.t, d_hamils, ...){
   # Make params numeric
   params = lapply(params, as.numeric)
   
-  if (.t == 0) {
-    phi_T = rep(1/(2^(params$n_qubits/2)), (2^params$n_qubits))
-    return(phi_T)
-  }
+  # if (.t == 0) {
+  #   phi_T = rep(1/(2^(params$n_qubits/2)), (2^params$n_qubits))
+  #   return(phi_T)
+  # }
   
+  # Initialise empty DF
+  d_solved_system <- tibble(
+    time = numeric(),
+    phi_t = list(),
+    shannon_entropy = numeric()
+  )
   
-  for (t in seq(0, .t, by = params$t_step)) {
+  for (t in seq(0, params$time_T, by = params$t_step)) {
     
     # Evaluate first initial step
     if (t == 0) {
       # Initialise ground state vector
       loginfo("Initialising State Vector")
       phi_0 <- rep(1/(2^(params$n_qubits/2)), (2^params$n_qubits))
+      
+      d_solved_system <- d_solved_system %>% 
+        bind_rows(
+          tibble(
+            time = t,
+            phi_t = list(phi_0),
+            shannon_entropy = calculate_entanglement(phi_0, params$n_qubits) # Calculate entanglement
+          )
+        )
       
     } else if (t == (0 + params$t_step)) {
       # Solve first time step
@@ -41,6 +56,16 @@ evolve_quantum_system = function(.t, d_hamils, ...){
         phi_0
       )
       
+      # Add to data-frame of solved system
+      d_solved_system <- d_solved_system %>% 
+        bind_rows(
+          tibble(
+            time = t,
+            phi_t = list(phi_T),
+            shannon_entropy = calculate_entanglement(phi_T, params$n_qubits) # Calculate entanglement
+          )
+        )
+      
     } else {
       # Solve subsequent systems
       phi_T <- solve_schrodinger_analytically(
@@ -49,8 +74,19 @@ evolve_quantum_system = function(.t, d_hamils, ...){
         t,
         phi_T
       )
+      
+      # Add to data-frame of solved system and calculate entanglement
+      d_solved_system <- d_solved_system %>% 
+        bind_rows(
+          tibble(
+            time = t,
+            phi_t = list(phi_T),
+            shannon_entropy = calculate_entanglement(phi_T, params$n_qubits) # Calculate entanglement as shannon entropy
+          )
+        )
+      
     }
   }
   
-  phi_T
+  d_solved_system
 }

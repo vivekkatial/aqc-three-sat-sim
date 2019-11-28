@@ -108,9 +108,8 @@ with(mlflow_start_run(), {
   
   loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
   
-  d_solved_system <- d_hamils %>% 
-    mutate(phi_t = map(t, evolve_quantum_system, d_hamils, params$build_hamiltonians$params)) %>% 
-    mutate(shannon_entropy = map_dbl(phi_t, calculate_entanglement, params$build_hamiltonians$params$n_qubits))
+  d_solved_system <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
+  
   
   # Extract final state
   phi_T <- d_solved_system[[nrow(d_solved_system), "phi_t"]]
@@ -149,7 +148,7 @@ with(mlflow_start_run(), {
   loginfo("Plotting Entanglement")
   
   p_entanglement <- d_solved_system %>% 
-    select(t, shannon_entropy) %>% 
+    select(time, shannon_entropy) %>% 
     plot_entanglement()
 
   ggsave("tmp/entanglement_plot.png")
@@ -158,6 +157,7 @@ with(mlflow_start_run(), {
   
   # Minimum Energy Gap ------------------------------------------------------
   
+  # TODO: Chat to charles about what the best metric for this is!!
   # Calculate min energy gap
   min_gap <- d_hamils %>% 
     mutate(gap = n_2 - n_1) %>% 

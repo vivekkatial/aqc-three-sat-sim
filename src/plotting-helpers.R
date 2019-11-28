@@ -54,8 +54,8 @@ plot_entanglement = function(d_solved_system){
   
   # Plot Shannon Entropy at the end
   d_solved_system %>% 
-    select(t, shannon_entropy) %>% 
-    ggplot(aes(x = t, y = shannon_entropy)) + 
+    select(time, shannon_entropy) %>% 
+    ggplot(aes(x = time, y = shannon_entropy)) + 
     geom_line() + 
     theme_classic() + 
     labs(
