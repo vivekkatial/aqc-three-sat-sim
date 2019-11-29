@@ -69,6 +69,10 @@ calculate_entanglement = function(.phi, .n_qubits=NULL){
   # Find shannon entropy
   shannon_entropy = sum(-p_decomp * log2(p_decomp))
   
+  if (is.nan(shannon_entropy)) {
+    shannon_entropy = 0
+  }
+  
   shannon_entropy
 }
 

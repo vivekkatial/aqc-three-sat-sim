@@ -6,6 +6,7 @@ experiment:
   utils: 
     - "utils/schrodinger-solver.R"
     - "utils/define-pauli-matrices.R"
+    - "src/measure-quantum/measure-entanglement.R"
 
 initialise:
   source: "src/generate-instances.R"
@@ -23,7 +24,8 @@ build_hamiltonians:
     num_energy_levels: "{{num_energy_levels}}"
 
 state_evolution:
-  source: "src/evolve-quantum-system.R"
-  
+  source: 
+    - "src/evolve-quantum-system.R"
+
 results:
   source: "src/plotting-helpers.R"

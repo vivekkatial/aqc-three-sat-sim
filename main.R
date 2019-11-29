@@ -24,8 +24,8 @@ source("utils/exp-utils.R")
 basicConfig()
 options(warn=-1)
 
-exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
-# exp_param_file <- commandArgs(trailingOnly = TRUE)
+# exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
+exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
 loginfo("Starting Experiment with conifguration: '%s'", exp_param_file)
@@ -57,7 +57,7 @@ if (!(params$experiment$name %in% mlflow:::mlflow_list_experiments()$name)) {
 loginfo("Starting Run")
 with(mlflow_start_run(), {
   
-  browser()
+  # browser()
   
   loginfo("Logging parameter file: '%s'", exp_param_file)
   mlflow_log_artifact(exp_param_file)
@@ -158,11 +158,13 @@ with(mlflow_start_run(), {
   # Minimum Energy Gap ------------------------------------------------------
   
   # TODO: Chat to charles about what the best metric for this is!!
+  #' 
   # Calculate min energy gap
   min_gap <- d_hamils %>% 
     mutate(gap = n_2 - n_1) %>% 
     summarise(min = min(gap)) %>% 
     pull(min)
+  
 
   mlflow_log_metric("min_energy_gap", min_gap)
   
