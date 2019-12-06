@@ -20,12 +20,6 @@ From: python:3.6
     MLFLOW_BIN \
     S3_BUCKET
 
-%apprun R
-  exec R "${@}"
-
-%apprun run_experiment
-  exec Rscript "main.R ${@}"
-
 %post
   # Print image info
   cat /etc/os-release
@@ -101,11 +95,45 @@ From: python:3.6
   # Clean up
   rm -rf /var/lib/apt/lists/*
 
-%runscript
+####################################################
+# APP TO RUN EXPERIMENT
+####################################################
+
+%apphelp run_experiment
+  This is the help for running experiments. To run an experiment feed the following Arguments: 
+    - ARG_1=<EXPERIMENTAL_CONFIG_YAML_FILE_NAME>
+
+%applabels run_experiment
+  APP_NAME RUNNING_EXPERIMENTS
+
+%apprun run_experiment
+  echo "Container was created $NOW"
+
   echo "Arguments received: $*"
-  
-  # Upload dummy file to AWS
-  aws s3 cp Rplots.pdf  $S3_BUCKET/test.pdf --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
+
+  # Source in MLFLOW Credentials
+  source .credentials/mlflow_creds.sh
+
+  # Run experiment with parameter file
+  Rscript main.R "$@"
+
+  # Move experiment to complete folder
+  echo "Completed experiment $@ moving to AWS S3 storage"
+  aws s3 mv $S3_BUCKET/$EXPERIMENT_NAME/ready/$@ $S3_BUCKET/$EXPERIMENT_NAME/complete/$@  --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
+
+
+####################################################
+# APP TO BUILD EXPERIMENTS
+####################################################
+
+%apphelp build_experiments
+  This application is to build all experimental configurations
+
+%applabels build_experiments
+  APP_NAME BUILD_EXPERIMENTS
+
+%apprun build_experiments
+  echo "Container was created $NOW"
 
   # execute script
   Rscript src/make-templates.R
@@ -116,3 +144,10 @@ From: python:3.6
   # Migrate template files onto remote storage
   echo "Moving template files from CONTAINER to AWS S3 STORAGE"
   aws s3 mv params/ready/ $S3_BUCKET/$EXPERIMENT_NAME/ready/ --recursive --exclude "*" --include "*.yml" --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
+
+
+%runscript
+  echo "Container was created $NOW"
+
+  echo "Run one of the built apps. You're not running anything!"
+  
