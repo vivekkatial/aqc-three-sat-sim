@@ -165,9 +165,17 @@ with(mlflow_start_run(), {
     summarise(min = min(gap)) %>% 
     pull(min)
   
-
   mlflow_log_metric("min_energy_gap", min_gap)
   
+  # Maximum Entanglement Entropy --------------------------------------------
+  
+  max_shannon_entropy <- max(d_solved_system$shannon_entropy)
+  mlflow_log_metric("max_shannon_entropy", max_shannon_entropy)
+
+  # SAT - Clause/Var Ratio --------------------------------------------------
+  
+  clause_var_ratio <- as.numeric(params$initialise$params$k)/as.numeric(params$initialise$params$n_qubits)
+  mlflow_log_metric("clause_var_ratio", clause_var_ratio)
   
   # Ending Experiment -------------------------------------------------------
   loginfo("Experiment Complete!")

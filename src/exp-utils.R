@@ -21,15 +21,16 @@ source_exp_scripts <- function(params){
     # Check if source inside params setting
     if ("source" %in% names(params[[i]])) {
       # Source in scripts
-      loginfo("Sourcing Script: '%s'", params[[i]][["source"]])
-      
-      # Load scripts
-      tryCatch(
-        source(params[[i]][["source"]]),
-        error = function(e){
-          logerror("Unable to source script file '%s' - %s", params[[i]][["source"]], e)
-        }
-      )
+      for (j in params[[i]][["source"]]) {
+        loginfo("Sourcing Script: '%s'", j)
+        # Load scripts
+        tryCatch(
+          source(j),
+          error = function(e){
+            logerror("Unable to source script file '%s' - %s", params[[i]][["source"]], e)
+          }
+        )
+      }
     }
   }
 }
@@ -75,4 +76,3 @@ clean_hamiltonian = function(hamiltonian, n_qubits){
     mutate(bit_str = map_chr(ind, convert_int_to_bit)) %>% 
     mutate(bit_str = str_pad(bit_str, side = "left", pad = "0", width = n_qubits))
 }
-
