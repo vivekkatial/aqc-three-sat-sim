@@ -35,13 +35,6 @@ create_instance_space = function(n_qubits){
   d_instance_space
 }
 
-#' This function finds the satisfying number of arguments for a given clause on an n-bit string
-#'
-#'
-find_num_assignments = function(d_instances, test_clause){
-  
-}
-
 generate_clauses = function(...){
   
   params <- list(...)[[1]]

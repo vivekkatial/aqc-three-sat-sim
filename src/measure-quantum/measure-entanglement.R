@@ -29,12 +29,15 @@ get_dims_density_matrix = function(.n_qubits){
   
   # Check if n_qubits odd or even
   if (.n_qubits %% 2 == 0) {
-    n_row = (2^(.n_qubits))/2
-    n_col = (2^(.n_qubits))/2
+    n_row = 2^(.n_qubits/2)
+    n_col = 2^(.n_qubits/2)
   } else {
-    n_row = (2^.n_qubits)/2
-    n_col = (2^(.n_qubits - 1))/2
+    n_row = 2^(ceiling(.n_qubits/2))
+    n_col = 2^(floor(.n_qubits/2))
   }
+  
+  # Verify dimensions are correct
+  testthat::expect_equal(n_row * n_col, 2^(.n_qubits))
   
   # Return params
   list(
@@ -49,6 +52,8 @@ get_dims_density_matrix = function(.n_qubits){
 #' @param .n_qubits Parameter for number of qubits
 #' @return shannon entropy
 calculate_entanglement = function(.phi, .n_qubits=NULL){
+  
+  #browser()
   
   .n_qubits = as.numeric(.n_qubits)
   
@@ -65,6 +70,9 @@ calculate_entanglement = function(.phi, .n_qubits=NULL){
   
   # Extract correlations
   p_decomp = (decomposed_system$d)^2
+  
+  # Verify decomposition is a PDF
+  testthat::expect_equal(sum(p_decomp), 1)
   
   # Find shannon entropy
   shannon_entropy = sum(-p_decomp * log2(p_decomp))
