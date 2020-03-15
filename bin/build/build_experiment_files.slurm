@@ -10,8 +10,10 @@
 #SBATCH -t 0:15:00
 
 # Specify your email address to be notified of progress.
-### SBATCH --mail-user=vkatial@student.unimelb.edu.au
-### SBATCH --mail-type=ALL
+# SBATCH --mail-user=vkatial@student.unimelb.edu.au
+# SBATCH --mail-type=END,FAIL
+
+# Specify the output file name
 
 # Load in Singularity Model
 module load Singularity/3.2.0-spartan_gcc-6.2.0
