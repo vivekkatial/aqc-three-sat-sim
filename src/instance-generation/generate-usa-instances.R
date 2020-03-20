@@ -10,12 +10,14 @@
 #' @example
 #' list(n_qubits = 13, n_sat=3) %>% 
 #'  generate_usa_clauses()
-generate_usa_clauses = function(...){
+generate_clauses = function(...){
   # Extract params
   params <- list(...)[[1]]
   
   # Extract number of qubits
-  n_qubits = params$n_qubits
+  n_qubits = as.numeric(params$n_qubits)
+  n_sat = as.numeric(params$n_sat)
+  
   
   # Inititate instance space
   d_instances <- .create_instance_space(n_qubits)
@@ -25,7 +27,7 @@ generate_usa_clauses = function(...){
   # Clause ticker
   i = 2
   # Set initial clause
-  clause_init = sample(1:n_qubits, params$n_sat) %>% sort()
+  clause_init = sample(1:n_qubits, n_sat) %>% sort()
   # Initiate datastructure to hold clauses
   clauses = list(k_1 = clause_init)
   
@@ -34,7 +36,7 @@ generate_usa_clauses = function(...){
   
   while(num_sat_assignments != 1){
     
-    clause_i = sample(1:n_qubits, params$n_sat) %>% sort()
+    clause_i = sample(1:n_qubits, n_sat) %>% sort()
     
     
     # Check that the clause exists

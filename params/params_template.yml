@@ -9,10 +9,9 @@ experiment:
     - "src/measure-quantum/measure-entanglement.R"
 
 initialise:
-  source: "src/generate-instances.R"
+  source: "src/instance-generation/generate-usa-instances.R"
   params:
     n_qubits: "{{n_qubits}}"
-    k: "{{k}}"
     n_sat: "{{n_sat}}"
     
 build_hamiltonians:

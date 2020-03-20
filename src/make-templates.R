@@ -115,10 +115,7 @@ apply_experiment_rules <- function(param_grid){
   
   # Apply rules specific to this experiment
   param_grid %>% 
-    filter(
-      n_qubits > n_sat,
-      n_qubits > k
-      )
+    filter(n_qubits > n_sat)
 }
 
 
