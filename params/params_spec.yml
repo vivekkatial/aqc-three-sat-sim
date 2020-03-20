@@ -1,14 +1,3 @@
-n_qubits:
-  - 6
-  - 7
-  - 8
-  - 9
-  - 10
-  - 11
-  - 12
-  - 13
-  - 14
-  - 15
 n_sat: 3
 t_step:
   - 0.01
@@ -18,3 +7,8 @@ time_T:
   - 10
   - 100
 num_energy_levels: 4
+VECTOR_1:
+  - "instance_index && 1:10"
+VECTOR_2:
+  - "n_qubits && 7:17"
+  

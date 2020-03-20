@@ -21,6 +21,9 @@ param_template <- read_file("params/params_template.yml")
 
 make_parameter_filename = function(...){
   
+  # Browser
+  browser()
+  
   # Unpack parameters 
   params <- list(...)
   
@@ -118,6 +121,32 @@ apply_experiment_rules <- function(param_grid){
     filter(n_qubits > n_sat)
 }
 
+
+# Parse Vectors -----------------------------------------------------------
+
+
+
+# Negative look-behind REGEX 
+# Based on: https://stackoverflow.com/questions/7124778/how-to-match-anything-up-until-this-sequence-of-characters-in-a-regular-expres
+.extract_vector_var = function(vector_def){
+  vector_def %>% 
+    str_extract(".+?(?=\\s&&\\s)")  
+}
+
+# Positive look-behind REGEX https://stackoverflow.com/questions/4419000/regex-match-everything-after-question-mark
+.extract_vector_val = function(vector_def){
+  vector_def %>% 
+    str_extract("(?<=\\s&&\\s).*")
+}
+
+  
+
+param_spec %>% 
+  cross_df() %>% 
+  mutate_at(vars(starts_with("VECTOR_")), list(var = .extract_vector_val)) %>% 
+  select(x = VECTOR_1_var) %>% 
+  mutate(vec = map(x, function(x){x %>% parse(text = .) %>% eval()})) %>% 
+  unnest(vec)
 
 # Build Grid --------------------------------------------------------------
 

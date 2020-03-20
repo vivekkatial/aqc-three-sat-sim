@@ -154,6 +154,16 @@ with(mlflow_start_run(), {
   ggsave("tmp/entanglement_plot.png")
   mlflow_log_artifact("tmp/entanglement_plot.png")
   
+
+  # Logging datafiles -------------------------------------------------------
+  d_solved_system %>% 
+    write_rds("tmp/d_solved_system.rds")
+  
+  d_clauses %>% 
+    write_rds("tmp/d_clauses.rds")
+  
+  mlflow_log_artifact("tmp/d_solved_system.rds")
+  
   
   # Minimum Energy Gap ------------------------------------------------------
   
