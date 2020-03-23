@@ -8,7 +8,7 @@ time_T:
   - 100
 num_energy_levels: 4
 VECTOR_1:
-  - "instance_index && 1:10"
+  instance_index: 1:100
 VECTOR_2:
-  - "n_qubits && 7:17"
+  n_qubits: 7:17
   
