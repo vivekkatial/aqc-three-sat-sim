@@ -15,8 +15,8 @@ From: python:3.6
   S3_BUCKET=s3://testBucket
 
   # Export env vars for LC_ALL
-  export LC_ALL=C.UTF-8
-  export LANG=C.UTF-8
+  export LC_ALL=en_US.UTF-8
+  export LANG=en_US.UTF-8
   # Export env vars
   export EXPERIMENT_NAME \
     MLFLOW_S3_ENDPOINT_URL \
