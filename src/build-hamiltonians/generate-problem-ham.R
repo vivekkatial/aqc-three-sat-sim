@@ -71,12 +71,14 @@ check_sat = function(bit_string, clause){
   ) %>% 
     Reduce('+', .)
   
-  # Only true if ONE bit satisfies
+  # Verify valid formula being presented
   if (is.na(sat)) {
     print(sprintf("Bit String: \t %s", bit_string))
     print(sprintf("Clause: \t %s", clause))
     print(sprintf("Bit Clause: \t %s", bit_clause))
   }
+  
+  # Only true if ONE bit satisfies
   if (sat == 1) {
     return (TRUE)
   } else {

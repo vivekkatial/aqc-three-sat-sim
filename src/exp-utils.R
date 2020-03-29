@@ -60,7 +60,7 @@ convert_int_to_bit = function(int){
     # Conv to int
     as.integer() %>% 
     paste0(collapse = "") %>% 
-    as.integer()
+    as.numeric()
   
 }
 
