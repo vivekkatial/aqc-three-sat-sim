@@ -7,7 +7,7 @@
 # --------------------------------------------
 
 # Set env vars
-source bin/set-environment-variables.sh
+source bin/init/set-environment-variables.sh
 
 trap "exit" INT
 
@@ -23,8 +23,9 @@ for file in $(aws s3 ls $EXPERIMENT_FILE_DIR --endpoint-url=$MLFLOW_S3_ENDPOINT_
 
      # Experiment name
      experiment_name=${file::${#file}-4}
+     echo $experiment_name
      # Run experiment as an instance of the singularity container
-     sbatch bin/run_experiment.slurm --output=$file.log 
+     # sbatch bin/run_experiment.slurm --output=$file.log 
 
 done
 
