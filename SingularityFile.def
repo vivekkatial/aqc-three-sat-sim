@@ -145,12 +145,9 @@ From: python:3.6
   # make template files
   echo "Completed making template files"
 
-  # Date contral path for S3 Storage
-  export DATE_PATH=$(date +%D)
-
   # Migrate template files onto remote storage
   echo "Moving template files from CONTAINER to AWS S3 STORAGE"
-  aws s3 mv params/ready/ $S3_BUCKET/$EXPERIMENT_NAME/ready/$DATE_PATH/ --recursive --exclude "*" --include "*.yml" --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
+  aws s3 mv params/ready/ $S3_BUCKET/$EXPERIMENT_NAME/ready/ --recursive --exclude "*" --include "*.yml" --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
 
 
 %runscript
