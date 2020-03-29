@@ -21,9 +21,7 @@
 # Load in Singularity Model
 module load Singularity/3.2.0-spartan_gcc-6.2.0
 
-parameter_file=$1
-export run_path='params/ready/`$parameter_file`'
-echo "Running Experiment on log file $run_path"
+echo "Running Experiment on log file $1"
 
 # The command to actually run the job
-singularity run --app portable-image.img $run_path
+singularity run --app portable-image.img $1
