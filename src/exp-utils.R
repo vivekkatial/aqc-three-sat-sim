@@ -58,7 +58,7 @@ convert_int_to_bit = function(int){
     # Reverse order
     rev() %>% 
     # Conv to int
-    as.integer() %>% 
+    as.numeric() %>% 
     paste0(collapse = "") %>% 
     as.numeric()
   
