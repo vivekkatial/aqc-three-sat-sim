@@ -12,7 +12,7 @@
 # How much memory you need.
 # --mem will define memory per node and
 # --mem-per-cpu will define memory per CPU/core. Choose one of those.
-#SBATCH --mem=100GB
+#SBATCH --mem=50GB
 
 # Specify your email address to be notified of progress.
 ### SBATCH --mail-user=vkatial@student.unimelb.edu.au
