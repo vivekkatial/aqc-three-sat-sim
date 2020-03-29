@@ -72,9 +72,10 @@ check_sat = function(bit_string, clause){
     Reduce('+', .)
   
   # Only true if ONE bit satisfies
+  print(sat)
   if (sat == 1) {
     return (TRUE)
-  } else{
+  } else {
     return (FALSE)
   }
 }
