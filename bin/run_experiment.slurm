@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1
 
 # set your minimum acceptable walltime=hours:minutes:seconds
-#SBATCH -t 0:15:00
+#SBATCH -t 14:00:00
 
 # How much memory you need.
 # --mem will define memory per node and
