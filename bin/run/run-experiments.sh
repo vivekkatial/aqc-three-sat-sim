@@ -25,14 +25,12 @@ for file in $(aws s3 ls $EXPERIMENT_FILE_DIR --endpoint-url=$MLFLOW_S3_ENDPOINT_
      # Experiment name
      experiment_name=${file::${#file}-4}
      
-     # Define run_file
+     # Define run_file and log_file
      export run_file=params/ready/$file
+     export log_file=logs/$file.log
+
      echo -e "Submitting job: \t $run_file"
      # Run experiment as an instance of the singularity container
-     sbatch --output='logs/$file.log' bin/run_experiment.slurm $run_file
-
-     exit
+     sbatch --output=$log_file bin/run_experiment.slurm $run_file
 
 done
-
-
