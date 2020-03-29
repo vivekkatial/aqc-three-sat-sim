@@ -1,7 +1,7 @@
 experiment: 
   name: "three-sat"
   author: "vivek"
-  tracking-uri: "http://localhost:5000"
+  tracking-uri: "http://115.146.95.176:5000/"
   seed: 1032918
   utils: 
     - "utils/schrodinger-solver.R"
@@ -9,11 +9,11 @@ experiment:
     - "src/measure-quantum/measure-entanglement.R"
 
 initialise:
-  source: "src/generate-instances.R"
+  source: "src/instance-generation/generate-usa-instances.R"
   params:
     n_qubits: "{{n_qubits}}"
-    k: "{{k}}"
     n_sat: "{{n_sat}}"
+    instance_index: "{{instance_index}}"
     
 build_hamiltonians:
   source: "src/build-hamiltonians/construct-time-evolution.R"

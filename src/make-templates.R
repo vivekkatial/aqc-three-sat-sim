@@ -40,6 +40,9 @@ make_parameter_filename = function(...){
 
 make_parameter_file = function(...){
   
+  #' TODO: Implement a test to ensure everything in the 
+  #' script for  
+  
   # Unpack parameters 
   params <- list(...)
   parameter_file = param_template
@@ -54,7 +57,7 @@ make_parameter_file = function(...){
     str_remove_all("\\{|\\}")
   
   if (spec_params %in% template_params %>% sum() != length(spec_params)) {
-    stop(printf("Parameters '%s' not in template file", setdiff(spec_params, template_params)))
+    stop(sprintf("Parameters '%s' not in template file", setdiff(spec_params, template_params)))
   }
   
   # Read template file
@@ -115,19 +118,104 @@ apply_experiment_rules <- function(param_grid){
   
   # Apply rules specific to this experiment
   param_grid %>% 
-    filter(
-      n_qubits > n_sat,
-      n_qubits > k
-      )
+    filter(n_qubits > n_sat)
 }
+
+
+# Parse Vectors -----------------------------------------------------------
+
+
+
+# Negative look-behind REGEX 
+# Based on: https://stackoverflow.com/questions/7124778/how-to-match-anything-up-until-this-sequence-of-characters-in-a-regular-expres
+.extract_vector_var = function(vector_def){
+  vector_def %>% 
+    str_extract(".+?(?=\\s&&\\s)")  
+}
+
+# Positive look-behind REGEX https://stackoverflow.com/questions/4419000/regex-match-everything-after-question-mark
+# .extract_vector_val = function(vector_def){
+#   vector_def %>% 
+#     str_extract("(?<=\\s&&\\s).*")
+# }
+
+.extract_vector_val = function(vec_str){
+  
+  #browser()
+
+  # Base index
+  base_ind = vec_str %>% 
+    str_extract(".+?(?=:)") %>% 
+    as.numeric()
+  
+  # Final Index
+  final_ind = vec_str %>% 
+    str_extract("(?<=:).*") %>% 
+    as.numeric()
+  
+  # Define vec
+  vector = seq(base_ind, final_ind, by=1)
+  list(vector)
+}
+  
+
+.extract_vector_var = function(x, ls){
+  
+  map_chr(x, function(vec){
+    ls[[vec]] %>% 
+      names()
+  })
+}
+
+#' @param param_spec Specification file read in as `read_yaml`
+#' @return param_grid `tibble()` consisting of the parameters
+build_param_grid = function(param_spec){
+  
+  # Build a nested dataframe (vectors nested as columns)
+  d_params_nested <- param_spec %>% 
+    cross_df() %>% 
+    rowwise() %>% 
+    mutate_at(vars(starts_with("VECTOR_")), .extract_vector_val) %>% 
+    rename_at(vars(starts_with("VECTOR_")), list(~.extract_vector_var(x = ., ls=param_spec)))
+  
+  # Extract parameter types 
+  d_types <- map(d_params_nested, class)
+  
+  # Identify column names
+  col_names <- d_params_nested %>% names()
+  
+  # Initialise iterator
+  i = 1
+  
+  # Loop over each col
+  for (col_type in d_types) {
+    # Identify list columns
+    if (col_type == "list") {
+      
+      # Unnest relevant columns
+      print(sprintf("Unnesting column %s", col_names[i]))
+      
+      # Unnest `list` columns
+      d_params_nested <- d_params_nested %>% 
+        unnest(col_names[i])
+    }
+    
+    # Iterate
+    i = i + 1
+  }
+  
+  d_params_nested
+}
+
+
+d_params_grid <- build_param_grid(param_spec)
 
 
 # Build Grid --------------------------------------------------------------
 
-param_grid <- param_spec %>% 
-  cross_df() %>% 
+param_grid_final <- d_params_grid %>% 
   mutate(
-    parameter_filename         = pmap_chr(., make_parameter_filename),
+    parameter_filename         = pmap_chr(., make_parameter_filename) ,
     parameter_file_content     = pmap_chr(., make_parameter_file)
   ) %>% 
   apply_experiment_rules()
@@ -135,6 +223,7 @@ param_grid <- param_spec %>%
 #  Write out  to  files
 mapply(
   .write_parameter_file, 
-  param_grid$parameter_filename, 
-  param_grid$parameter_file_content
+  param_grid_final$parameter_filename, 
+  param_grid_final$parameter_file_content
   )
+

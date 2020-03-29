@@ -24,8 +24,8 @@ source("utils/exp-utils.R")
 basicConfig()
 options(warn=-1)
 
-exp_param_file <- "params/ready/n_qubits5__k4__n_sat3__t_step0.100000__time_T100__num_energy_levels4.yml"
-# exp_param_file <- commandArgs(trailingOnly = TRUE)
+# exp_param_file <- "params/ready/n_sat3__t_step0.100000__time_T1__num_energy_levels4__instance_index93.000000__n_qubits7.000000.yml"
+exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
 loginfo("Starting Experiment with conifguration: '%s'", exp_param_file)
@@ -57,8 +57,6 @@ if (!(params$experiment$name %in% mlflow:::mlflow_list_experiments()$name)) {
 loginfo("Starting Run")
 with(mlflow_start_run(), {
   
-  # browser()
-  
   loginfo("Logging parameter file: '%s'", exp_param_file)
   mlflow_log_artifact(exp_param_file)
   mlflow_log_param("file_name", exp_param_file)
@@ -74,7 +72,7 @@ with(mlflow_start_run(), {
   
   # Generate Clauses --------------------------------------------------------
   
-  loginfo("Generating upto 'k=%s' clauses", params$initialise$params$k)
+  loginfo("Generating clauses", params$initialise$params$k)
   
   # Parameters for clause
   clause_params <- params$initialise$params %>% 
@@ -154,6 +152,17 @@ with(mlflow_start_run(), {
   ggsave("tmp/entanglement_plot.png")
   mlflow_log_artifact("tmp/entanglement_plot.png")
   
+
+  # Logging datafiles -------------------------------------------------------
+  d_solved_system %>% 
+    write_rds("tmp/d_solved_system.rds")
+  
+  d_clauses %>% 
+    write_rds("tmp/d_clauses.rds")
+  
+  mlflow_log_artifact("tmp/d_solved_system.rds")
+  mlflow_log_artifact("tmp/d_clauses.rds")
+  
   
   # Minimum Energy Gap ------------------------------------------------------
   
@@ -174,7 +183,7 @@ with(mlflow_start_run(), {
 
   # SAT - Clause/Var Ratio --------------------------------------------------
   
-  clause_var_ratio <- as.numeric(params$initialise$params$k)/as.numeric(params$initialise$params$n_qubits)
+  clause_var_ratio <- length(d_clauses)/as.numeric(params$initialise$params$n_qubits)
   mlflow_log_metric("clause_var_ratio", clause_var_ratio)
   
   # Ending Experiment -------------------------------------------------------

@@ -11,7 +11,7 @@
 
 # Specify your email address to be notified of progress.
 # SBATCH --mail-user=vkatial@student.unimelb.edu.au
-# SBATCH --mail-type=END,FAIL
+# SBATCH --mail-type=ALL
 
 # Specify the output file name
 
