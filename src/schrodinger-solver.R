@@ -78,7 +78,7 @@ generate_pdf = function(phi){
     mutate(p = Re(p)) %>% 
     mutate(state = 0:(n()-1)) %>% 
     as_tibble() %>% 
-    mutate(bit_str = map_chr(state, convert_int_to_bit)) %>% 
+    mutate(bit_str = map_chr(state, .convert_int_to_bit)) %>% 
     # Padd to be a "n_qubit" system
     mutate(bit_str = str_pad(bit_str, side = "left", pad = "0", width = log(n(), base = 2)))
   
