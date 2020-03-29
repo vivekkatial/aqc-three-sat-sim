@@ -21,7 +21,9 @@
 # Load in Singularity Model
 module load Singularity/3.2.0-spartan_gcc-6.2.0
 
-echo "Running Experiment on log file $1"
+file_input=$1
+echo "Running Experiment on log file $file_input"
+
 
 # The command to actually run the job
-singularity run --app run_experiment portable-image.img $1
+singularity run --app run_experiment portable-image.img $file_input
