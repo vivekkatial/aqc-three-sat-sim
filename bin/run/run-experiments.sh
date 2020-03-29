@@ -29,7 +29,7 @@ for file in $(aws s3 ls $EXPERIMENT_FILE_DIR --endpoint-url=$MLFLOW_S3_ENDPOINT_
      export run_file=params/ready/$file
      echo -e "Submitting job: \t $run_file"
      # Run experiment as an instance of the singularity container
-     sbatch --output=$file.log bin/run_experiment.slurm $run_file
+     sbatch --output='logs/$file.log' bin/run_experiment.slurm $run_file
 
      exit
 

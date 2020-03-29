@@ -10,5 +10,5 @@ num_energy_levels: 4
 VECTOR_1:
   instance_index: 1:100
 VECTOR_2:
-  n_qubits: 7:17
+  n_qubits: 5:15
   
