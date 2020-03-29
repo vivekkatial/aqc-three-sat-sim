@@ -52,7 +52,7 @@ source_exp_utils <- function(params){
 
 # Convert integer to bit
 convert_int_to_bit = function(int){
-  
+  print(int)
   # Integer
   intToBits(int) %>% 
     # Reverse order
