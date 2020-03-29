@@ -121,9 +121,14 @@ From: python:3.6
   # Run experiment with parameter file
   Rscript main.R "$@"
 
+  # Find only file
+  export LOCAL_FILENAME=$@
+  export LOCAL_PREFIX="params/ready/"
+  export RAW_FILENAME=${LOCAL_FILENAME#"$LOCAL_PREFIX"}
+
   # Move experiment to complete folder
-  echo "Completed experiment $@ moving to AWS S3 storage"
-  aws s3 mv $S3_BUCKET/$EXPERIMENT_NAME/ready/$@ $S3_BUCKET/$EXPERIMENT_NAME/complete/$@  --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
+  echo "\n Completed experiment $@ moving to AWS S3 storage"
+  aws s3 mv $S3_BUCKET/$EXPERIMENT_NAME/ready/$RAW_FILENAME $S3_BUCKET/$EXPERIMENT_NAME/complete/$RAW_FILENAME  --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
 
 
 ####################################################

@@ -70,7 +70,7 @@ solve_schrodinger_analytically = function(d_hamiltonian, params, t, phi_init){
 #' @phi A matrix with each element as a complex class
 #' @return A tibble corresponding to a pdf
 generate_pdf = function(phi){
-  # browser()
+  
   # Create probability distribution
   pdf <- (phi * Conj(phi)) %>% 
     as_data_frame() %>% 
