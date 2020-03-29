@@ -21,7 +21,8 @@
 # Load in Singularity Model
 module load Singularity/3.2.0-spartan_gcc-6.2.0
 
-export run_path='params/ready/$1'
+parameter_file=$1
+export run_path='params/ready/$parameter_file'
 echo "Running Experiment on log file $run_path"
 
 # The command to actually run the job
