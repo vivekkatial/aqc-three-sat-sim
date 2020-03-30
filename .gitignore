@@ -54,3 +54,4 @@ params/*
 mlruns/*
 .Rproj.user
 tmp/**
+packrat/lib*/
