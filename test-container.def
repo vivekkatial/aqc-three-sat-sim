@@ -1,9 +1,13 @@
-BootStrap: library
-From: ubuntu:16.04
+BootStrap: docker
+From: python:3.6
 
 %post
 	apt-get -y update
 	apt-get -y install fortune cowsay lolcat
+
+	# PYTHON BLAH 
+	pip install numpy \
+		random
 
 %environment
 	export Author="VIVEK KATIAL"
@@ -12,7 +16,10 @@ From: ubuntu:16.04
 
 %runscript
 	echo "Welcome $Author to your first container! :))"
-	fortune | cowsay | lolcat
+	echo "We are going to run this script: 'fun.py'"
+
+	python fun.py
+	
 
 %labels
 	Author Vivek Katial
