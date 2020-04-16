@@ -1,0 +1,18 @@
+BootStrap: library
+From: ubuntu:16.04
+
+%post
+	apt-get -y update
+	apt-get -y install fortune cowsay lolcat
+
+%environment
+	export Author="VIVEK KATIAL"
+	export LC_ALL=C
+	export PATH=/usr/games:$PATH
+
+%runscript
+	echo "Welcome $Author to your first container! :))"
+	fortune | cowsay | lolcat
+
+%labels
+	Author Vivek Katial
