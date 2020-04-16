@@ -11,6 +11,7 @@
 #' list(n_qubits = 13, n_sat=3) %>% 
 #'  generate_usa_clauses()
 generate_clauses = function(...){
+  
   # Extract params
   params <- list(...)[[1]]
   
@@ -48,19 +49,34 @@ generate_clauses = function(...){
       # Find new number of satisfying assignments
       new_num_sat_assignments = nrow(d_filtered_instances)
       
-      if (new_num_sat_assignments < num_sat_assignments & new_num_sat_assignments > 0) {
+      if (new_num_sat_assignments < num_sat_assignments & num_sat_assignments > 1) {
         # Adding clause
         # print(sprintf("Adding clause %s", clause_i))
         # Add new clause to the list of clauses
         clauses[[paste0("k_", i)]] = clause_i
         num_sat_assignments = new_num_sat_assignments
+        # Increment clause ticker
+        i = i + 1
       }
-      # Increment clause ticker
-      i = i + 1
     }
   }
   
-  clauses
+  # Test condition
+  test_cond <- lapply(clauses, function(clause, d_satisfying_assignment){
+    all(.calc_satisfying_assignments(d_instances = d_satisfying_assignment, clause) == d_satisfying_assignment)
+  }, d_filtered_instances) %>% 
+    as.numeric() %>% 
+    sum() == length(clauses)
+  
+  # Validate instance clauses are all satisfied
+  if (test_cond) {
+    # Return clauses
+    clauses
+  } else {
+    stop("Invalid clauses generated")
+  }
+  
+  
 }
 
 #' This function calculates the number of satisfying assignments for a set of clause 
@@ -124,11 +140,13 @@ generate_clauses = function(...){
     cross_df() %>% 
     # Add column for binary string
     unite(bin_str, 1:ncol(.),sep="", remove = F) %>% 
+    # reverse bit string
+    mutate(bin_str = stringi::stri_reverse(bin_str)) %>% 
     # Convert to decimal
     mutate(num = strtoi(bin_str, base=2)) %>% 
     # Arrange by decimal number
     arrange(num) %>% 
     select(num, bin_str, everything())
   
-  d_instance_space
+  d_instance_space[, order(ncol(d_instance_space):1)]
 }

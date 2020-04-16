@@ -10,6 +10,8 @@
 #' @param n_qubits The number of qubits needed
 #' @param clause The number of clauses
 construct_ham_clause = function(n_qubits, clause){
+  
+  browser()
   # Build base Hamiltonian
   H_c_checked = diag(2^n_qubits) %>% 
     # Create Bit string for each val
@@ -38,7 +40,14 @@ construct_ham_clause = function(n_qubits, clause){
 #' For a given set of clauses this function generates the problem hamiltonian
 #' @param clauses
 #' @param n_qubits
-construct_ham_problem = function(n_qubits, clauses){
+create_ham_problem = function(n_qubits, clauses){
+  
+  browser()
+  
+  # Validate input
+  if (!is.numeric(n_qubits)) {
+    n_qubits = as.numeric(n_qubits)
+  }
   
   # Across all clauses 
   H_p = lapply(clauses, function(clause){

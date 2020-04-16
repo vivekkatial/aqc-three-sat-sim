@@ -11,6 +11,10 @@
 #' @param d_clauses A `list` containing the clauses on the n-bit strings
 create_ham_initial = function(n_qubits, d_clauses){
   
+  if (!is.numeric(n_qubits)) {
+    n_qubits = as.numeric(n_qubits)
+  }
+  
   # Across all clauses find out how many times each bit occurs
   H_b = lapply(1:n_qubits, function(x){
       create_h_b_ind(n_qubits = n_qubits, bit = x)

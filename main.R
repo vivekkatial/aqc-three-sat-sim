@@ -14,6 +14,7 @@ import_library("tidyverse")
 import_library("yaml")
 import_library("complexplus")
 import_library("mlflow")
+import_library("testthat")
 
 # Source Utils
 source("utils/exp-utils.R")
@@ -24,8 +25,8 @@ source("utils/exp-utils.R")
 basicConfig()
 options(warn=-1)
 
-# exp_param_file <- "params/ready/n_sat3__t_step0.010000__time_T100__num_energy_levels4__instance_index10.000000__n_qubits5.000000.yml"
-exp_param_file <- commandArgs(trailingOnly = TRUE)
+exp_param_file <- "params/ready/n_sat3__t_step0.010000__time_T100__num_energy_levels4__instance_index10.000000__n_qubits5.000000.yml"
+# exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
 loginfo("Starting Experiment with conifguration: '%s'", exp_param_file)
@@ -99,7 +100,19 @@ with(mlflow_start_run(), {
   loginfo("Logging Quantum System Parameters")
   mlflow_log_batch(params = quantum_params)
   
-  d_hamils <- generate_time_evolving_system(d_clauses, params$build_hamiltonians$params)
+  # BUILD INITIAL HAMILTONIAN (H_b)
+  H_b = create_ham_initial(
+    params$build_hamiltonians$params$n_qubits
+    )
+  
+  # BUILD PROBLEM HAMILTONIAN (H_p)
+  H_p = create_ham_problem(
+    n_qubits = params$build_hamiltonians$params$n_qubits,
+    clauses = d_clauses
+  )
+  
+  # Verify Problem Hamiltonian
+  test_problem_ham(H_p, params$experiment$name)
   
   
   # Solving Schrödingers Equation -------------------------------------------

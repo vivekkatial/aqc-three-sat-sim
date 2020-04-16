@@ -33,14 +33,7 @@ solve_schrodinger_analytically = function(d_hamiltonian, params, t, phi_init){
     logerror("Failed because time step not")
   }
   
-  ham_t <- d_hamiltonian %>%
-    # take hamiltonians at t_1 and t_2
-    slice((t_ind-1):t_ind) %>% 
-    pull(hamiltonian) %>% 
-    # convert to list
-    as.list() %>% 
-    # sum and divide by 2
-    Reduce("+",.)/2
+  ham_t <- gen
   
   # Compute iHt
   ham_p <- -1i* ham_t*params$t_step
