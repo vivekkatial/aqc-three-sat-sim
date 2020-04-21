@@ -148,9 +148,9 @@ with(mlflow_start_run(), {
   
   loginfo("Plotting Energy Gap")
   
-  # p_energy_gap <- d_hamils %>% 
-  #   plot_energy_gap()
-  # 
+  p_energy_gap <- d_solved_system %>%
+    plot_energy_gap()
+
   ggsave("tmp/energy_plot.png")
   mlflow_log_artifact("tmp/energy_plot.png")
   
@@ -183,8 +183,8 @@ with(mlflow_start_run(), {
   # TODO: Chat to charles about what the best metric for this is!!
   #' 
   # Calculate min energy gap
-  min_gap <- d_hamils %>% 
-    mutate(gap = n_2 - n_1) %>% 
+  min_gap <- d_solved_system %>% 
+    mutate(gap = lambda_2 - lambda_1) %>% 
     summarise(min = min(gap)) %>% 
     pull(min)
   

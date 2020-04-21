@@ -12,8 +12,6 @@
 #' @return A state vector phi with  the amplitudes of being in  each quantum state
 evolve_quantum_system = function(H_b, H_p, ...){
   
-  browser()
-  
   # Unpack parameters
   params = list(...)[[1]]
   
@@ -29,7 +27,9 @@ evolve_quantum_system = function(H_b, H_p, ...){
   d_solved_system <- tibble(
     time = numeric(),
     phi_t = list(),
-    shannon_entropy = numeric()
+    shannon_entropy = numeric(),
+    lambda_1 = numeric(),
+    lambda_2 = numeric()
   )
   
   for (t in seq(0, params$time_T, by = params$t_step)) {
@@ -40,16 +40,22 @@ evolve_quantum_system = function(H_b, H_p, ...){
       loginfo("Initialising State Vector")
       phi_0 <- rep(1/(2^(params$n_qubits/2)), (2^params$n_qubits))
       
+      # Find eigen vals for initial state
+      init_eigen_vals <- get_H_curr_eigen(H_b, ret.system = F, params)
+      
       d_solved_system <- d_solved_system %>% 
         bind_rows(
           tibble(
             time = t,
             phi_t = list(phi_0),
-            shannon_entropy = calculate_entanglement(phi_0, params$n_qubits) # Calculate entanglement
+            shannon_entropy = calculate_entanglement(phi_0, params$n_qubits), # Calculate entanglement
+            lambda_1 = as.numeric(init_eigen_vals$lambda_1),
+            lambda_2 = as.numeric(init_eigen_vals$lambda_2)
           )
         )
       
     } else if (t == (0 + params$t_step)) {
+      
       # Solve first time step
       sol_T <- solve_schrodinger_analytically(
         H_b,
@@ -69,13 +75,15 @@ evolve_quantum_system = function(H_b, H_p, ...){
           tibble(
             time = t,
             phi_t = list(phi_T),
-            shannon_entropy = calculate_entanglement(phi_T, params$n_qubits) # Calculate entanglement
+            shannon_entropy = calculate_entanglement(phi_T, params$n_qubits), # Calculate entanglement
+            lambda_1 = l_energy$n_1,
+            lambda_2 = l_energy$n_2
           )
         )
       
     } else {
       # Solve subsequent systems
-      phi_T <- solve_schrodinger_analytically(
+      sol_T <- solve_schrodinger_analytically(
         H_b,
         H_p,
         params,
@@ -93,7 +101,9 @@ evolve_quantum_system = function(H_b, H_p, ...){
           tibble(
             time = t,
             phi_t = list(phi_T),
-            shannon_entropy = calculate_entanglement(phi_T, params$n_qubits) # Calculate entanglement as shannon entropy
+            shannon_entropy = calculate_entanglement(phi_T, params$n_qubits), # Calculate entanglement as shannon entropy
+            lambda_1 = l_energy$n_1,
+            lambda_2 = l_energy$n_2
           )
         )
       
