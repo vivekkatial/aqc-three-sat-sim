@@ -58,7 +58,7 @@ evolve_quantum_system = function(H_b, H_p, ...){
         t,
         phi_0
       )
-      
+    
       # Extract results
       phi_T = sol_T$state_vector
       l_energy = sol_T$l_energy
