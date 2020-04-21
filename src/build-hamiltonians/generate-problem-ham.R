@@ -10,6 +10,7 @@
 #' @param n_qubits The number of qubits needed
 #' @param clause The number of clauses
 construct_ham_clause = function(n_qubits, clause){
+  
   # Build base Hamiltonian
   H_c_checked = diag(2^n_qubits) %>% 
     # Create Bit string for each val
@@ -25,7 +26,7 @@ construct_ham_clause = function(n_qubits, clause){
     which(H_c_checked$sat == T)
     ] = 0
   
-  H_c = H_c_checked %>% 
+  H_c <- H_c_checked %>% 
     select(-c("ind", "bit_str", "sat")) %>% 
     as.matrix()
   
@@ -38,7 +39,12 @@ construct_ham_clause = function(n_qubits, clause){
 #' For a given set of clauses this function generates the problem hamiltonian
 #' @param clauses
 #' @param n_qubits
-construct_ham_problem = function(n_qubits, clauses){
+create_ham_problem = function(n_qubits, clauses){
+  
+  # Validate input
+  if (!is.numeric(n_qubits)) {
+    n_qubits = as.numeric(n_qubits)
+  }
   
   # Across all clauses 
   H_p = lapply(clauses, function(clause){
@@ -57,7 +63,7 @@ construct_ham_problem = function(n_qubits, clauses){
 #' @param bit_string string representing the bit we're evaluating the constraint
 #' @param clause A numeric vector representing the indices
 check_sat = function(bit_string, clause){
-  
+
   # Check bit string
   bit_vec = bit_string %>% 
     str_split("") %>% 
@@ -70,18 +76,12 @@ check_sat = function(bit_string, clause){
   ) %>% 
     Reduce('+', .)
   
-  # Verify valid formula being presented
-  if (is.na(sat)) {
-    print(sprintf("Bit String: \t %s", bit_string))
-    print(sprintf("Clause: \t %s", clause))
-    print(sprintf("Bit Vec: \t %s", bit_vec))
-  }
   
   # Only true if ONE bit satisfies
   if (sat == 1) {
-    return (TRUE)
+    TRUE
   } else {
-    return (FALSE)
+    FALSE
   }
 }
 

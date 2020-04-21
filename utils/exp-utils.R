@@ -79,6 +79,9 @@ convert_int_to_bit = function(int){
     as.data.frame() %>% 
     tbl_df() %>% 
     mutate(ind = 0:(n()-1)) %>% 
-    mutate(bit_str = map_chr(ind, convert_int_to_bit)) %>% 
-    mutate(bit_str = str_pad(bit_str, side = "left", pad = "0", width = n_qubits))
+    mutate(
+      bit_str = map_chr(ind, convert_int_to_bit),
+      bit_str = str_remove_all(bit_str, "\\..*"),
+      bit_str = str_pad(bit_str, side = "left", pad = "0", width = n_qubits)
+      )
 }

@@ -6,21 +6,25 @@
 ###############################################################################
 
 #' This function plots the energy gap for a hamiltonian dataframe
-#' @param d_hamils This is a dataframe which consists of the hamiltonian matrix in each column
+#' @param d_solved_system This is a dataframe which consists of the hamiltonian matrix in each column
 #' @return A ggplot object containing a plot of the energy gap over time for the system
-plot_energy_gap = function(d_hamils){
-  
+plot_energy_gap = function(d_solved_system){
+
   # Check the correct data frame
-  if (!all(c("t", "hamiltonian", "n_1", "n_2", "n_3", "n_4") %in% names(d_hamils))) {
+  if (!all(c("time", "lambda_1", "lambda_2") %in% names(d_solved_system))) {
     stop("Incorrect data frame fed into function 'plot_energy_gap'")
   }
   
-  p_energy_gap <- d_hamils %>% 
-    select(-hamiltonian) %>% 
-    gather(var,n, -t) %>% 
-    ggplot(aes(x = t, y = n, col = var)) + 
+  p_energy_gap <- d_solved_system %>% 
+    select(time, lambda_1, lambda_2) %>% 
+    gather(var,n, -time) %>% 
+    ggplot(aes(x = time, y = n, col = var)) + 
     geom_line() + 
-    theme_classic()
+    theme_classic() + 
+    labs(
+      x = "time",
+      y = "energy"
+    )
 
 }
 

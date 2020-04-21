@@ -14,6 +14,7 @@ import_library("tidyverse")
 import_library("yaml")
 import_library("complexplus")
 import_library("mlflow")
+import_library("testthat")
 
 # Source Utils
 source("utils/exp-utils.R")
@@ -24,8 +25,8 @@ source("utils/exp-utils.R")
 basicConfig()
 options(warn=-1)
 
-# exp_param_file <- "params/ready/n_sat3__t_step0.010000__time_T100__num_energy_levels4__instance_index10.000000__n_qubits5.000000.yml"
-exp_param_file <- commandArgs(trailingOnly = TRUE)
+exp_param_file <- "params/ready/n_sat3__t_step0.010000__time_T100__num_energy_levels4__instance_index10.000000__n_qubits5.000000.yml"
+# exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
 loginfo("Starting Experiment with conifguration: '%s'", exp_param_file)
@@ -99,14 +100,26 @@ with(mlflow_start_run(), {
   loginfo("Logging Quantum System Parameters")
   mlflow_log_batch(params = quantum_params)
   
-  d_hamils <- generate_time_evolving_system(d_clauses, params$build_hamiltonians$params)
+  # BUILD INITIAL HAMILTONIAN (H_b)
+  H_b = create_ham_initial(
+    params$build_hamiltonians$params$n_qubits
+    )
+  
+  # BUILD PROBLEM HAMILTONIAN (H_p)
+  H_p = create_ham_problem(
+    n_qubits = params$build_hamiltonians$params$n_qubits,
+    clauses = d_clauses
+  )
+  
+  # Verify Problem Hamiltonian
+  test_problem_ham(H_p, params$experiment$name)
   
   
   # Solving Schrödingers Equation -------------------------------------------
   
   loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
   
-  d_solved_system <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
+  d_solved_system <- evolve_quantum_system(H_b, H_p, params$build_hamiltonians$params)
   
   
   # Extract final state
@@ -134,9 +147,10 @@ with(mlflow_start_run(), {
   # Plotting Energy Gap -----------------------------------------------------
   
   loginfo("Plotting Energy Gap")
-  p_energy_gap <- d_hamils %>% 
-    plot_energy_gap()
   
+  p_energy_gap <- d_solved_system %>%
+    plot_energy_gap()
+
   ggsave("tmp/energy_plot.png")
   mlflow_log_artifact("tmp/energy_plot.png")
   
@@ -169,8 +183,8 @@ with(mlflow_start_run(), {
   # TODO: Chat to charles about what the best metric for this is!!
   #' 
   # Calculate min energy gap
-  min_gap <- d_hamils %>% 
-    mutate(gap = n_2 - n_1) %>% 
+  min_gap <- d_solved_system %>% 
+    mutate(gap = lambda_2 - lambda_1) %>% 
     summarise(min = min(gap)) %>% 
     pull(min)
   

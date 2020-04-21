@@ -9,7 +9,8 @@
 
 #' This function solves schrodingers equation analytically for a small time step, t
 #' The function returns a state vector corresponding to the state of phi
-#' @param d_hamiltonian A dataframe consisting of nested hamiltonians as elements
+#' @param H_b A dataframe consisting of Initial Hamiltonian
+#' @param H_p A dataframe consisting of Final Hamiltonian
 #' @param params A list containing `n_qubits` and `t_step`
 #' @param t The time at which we're solving schrodingers equation
 #' @param phi_init A state vector to use as the initial state vector
@@ -18,32 +19,17 @@
 #' @export
 #' 
 #' @example TBC...
-solve_schrodinger_analytically = function(d_hamiltonian, params, t, phi_init){
+solve_schrodinger_analytically = function(H_b, H_p, params, t, phi_init){
   
-  # TODO: CHECK PARAMS
-  # browser()
-  # Find which hamiltonian to select
-  # if (t > 0.9) {
-  #   browser()
-  # }
+  H_1 = build_ham(H_b, H_p, t, params$time_T)
+  H_2 = build_ham(H_b, H_p, t + params$t_step, params$time_T)
   
-  t_ind <-  which(abs(d_hamiltonian$t - t) < 1e-12)
+  # Get current hamiltonian
+  H_curr = (H_1 + H_2)/2
   
-  if (sum(abs(d_hamiltonian$t - t) < 1e-12) != 1) {
-    logerror("Failed because time step not")
-  }
-  
-  ham_t <- d_hamiltonian %>%
-    # take hamiltonians at t_1 and t_2
-    slice((t_ind-1):t_ind) %>% 
-    pull(hamiltonian) %>% 
-    # convert to list
-    as.list() %>% 
-    # sum and divide by 2
-    Reduce("+",.)/2
   
   # Compute iHt
-  ham_p <- -1i* ham_t*params$t_step
+  ham_p <- -1i* H_curr*params$t_step
   
   # Calculate the state vector by e^A phi
   state_vec <- matexp(ham_p) %*% phi_init
@@ -56,12 +42,22 @@ solve_schrodinger_analytically = function(d_hamiltonian, params, t, phi_init){
   
   # Validate the normalisation
   if (Re(sum(state_vec_new*Conj(state_vec_new))) - 1 < 1e-13) {
-    print(sprintf("Solved at t=%s",t))
+    print(sprintf("Solved at t=%s now solving eigenvalue problem",t))
   } else {
     stop("Vector not normalised")
   }
   
-  state_vec_new
+  eigen_sol <- get_H_curr_eigen(H_curr = H_curr, ret.system = F, params)
+  
+  # Extract energies
+  l_energy <- eigen_sol$eigen_values
+  
+  # Output results
+  list(
+    state_vector = state_vec_new,
+    l_energy = l_energy
+  )
+  
 }
 
 # Convert state vector to PDF ---------------------------------------------
@@ -78,75 +74,25 @@ generate_pdf = function(phi){
     mutate(p = Re(p)) %>% 
     mutate(state = 0:(n()-1)) %>% 
     as_tibble() %>% 
-    mutate(bit_str = map_chr(state, convert_int_to_bit)) %>% 
-    # Padd to be a "n_qubit" system
-    mutate(bit_str = str_pad(bit_str, side = "left", pad = "0", width = log(n(), base = 2)))
+    mutate(
+      bit_str = map_chr(state, convert_int_to_bit),
+      bit_str = str_remove_all(bit_str, "\\..*"),
+      bit_str = str_pad(bit_str, side = "left", pad = "0", width = log2(length(phi)))
+    )
   
   pdf
 }
 
 
-# Example Run through -----------------------------------------------------
 
-# Source scripts
-# source("src/build-hamiltonians/construct-time-evolution.R")
-# source("utils/exp-utils.R")
-# source("utils/define-pauli-matrices.R")
-# 
-# # 1. Setup parameters and variables of our system
-# params = list(
-#   n_qubits = 5, 
-#   t_step = 0.01, 
-#   num_energy_levs = 2
-# )
-# 
-# # Set clauses
-# clause = list(
-#   c_1 = c(1,2,3,4,5)
-# )
-# 
-# # 2. Build all hamiltonians for all time steps 't'
-# d_hamiltonians <- generate_time_evolving_system(clause, params)
-# 
-# # 3. Evolve system by solving schorodingers equation
-# for (t in seq(0,1, by = params$t_step)) {
-#   
-#   # Evaluate first initial step
-#   if (t == 0) {
-#     # Initialise ground state vector
-#     
-#     phi_0 <- rep(1/(2^(params$n_qubits/2)), (2^params$n_qubits)) 
-# 
-#   } else if (t == (0 + params$t_step)) {
-#     # Solve first time step
-#     phi_T <- solve_schrodinger_analytically(
-#       d_hamiltonians,
-#       params,
-#       t,
-#       phi_0
-#     )
-#     
-#   } else {
-#     # Solve subsequent systems
-#     phi_T <- solve_schrodinger_analytically(
-#       d_hamiltonians,
-#       params,
-#       t,
-#       phi_T
-#     )
-#   }
-# }
-# 
-# phi_T %>% 
-#   generate_pdf() %>% 
-#   mutate(type = ifelse(abs(p - max(p)) < 1e-13, "max", "other")) %>% 
-#   ggplot(aes(x = bit_str, y = p, group = 1, fill = type)) + 
-#   geom_col(alpha = 0.6) + 
-#   labs(
-#     x = "State "
-#   ) + 
-#   theme_classic() + 
-#   #stat_smooth(geom = "area", span = 0.4, method = "glm", alpha = 0.4) +
-#   theme(
-#     axis.text.x = element_text(angle = 90, hjust = 1)
-#   )
+# Function to build temporary Hamiltonian ---------------------------------
+#' Determine the current hamiltonian in an evolution from adiabatic theorem
+#' @param H_b
+#' @param H_p
+#' @param t_step
+#' @param run_time
+build_ham = function(H_b, H_p, t_step, run_time){
+  # Build current Hamiltonian
+  H_curr = (1 - t_step/run_time)*H_b + (t_step/run_time)*H_p
+}
+
