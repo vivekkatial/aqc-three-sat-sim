@@ -6,11 +6,13 @@
 ###############################################################################
 
 #' This function evolves the system
-#' @param d_hamils A dataframe consisting of a valid  hamiltonian
+#' @param H_b A dataframe consisting of a valid  hamiltonian for the initial
+#' @param H_p A dataframe consisting of a valid hamiltonian for the final
 #' @param ... A list consisting of the  number of qubits, timestep
 #' @return A state vector phi with  the amplitudes of being in  each quantum state
-evolve_quantum_system = function(d_hamils, ...){
-  # browser()
+evolve_quantum_system = function(H_b, H_p, ...){
+  
+  browser()
   
   # Unpack parameters
   params = list(...)[[1]]
@@ -49,12 +51,17 @@ evolve_quantum_system = function(d_hamils, ...){
       
     } else if (t == (0 + params$t_step)) {
       # Solve first time step
-      phi_T <- solve_schrodinger_analytically(
-        d_hamils,
+      sol_T <- solve_schrodinger_analytically(
+        H_b,
+        H_p,
         params,
         t,
         phi_0
       )
+      
+      # Extract results
+      phi_T = sol_T$state_vector
+      l_energy = sol_T$l_energy
       
       # Add to data-frame of solved system
       d_solved_system <- d_solved_system %>% 
@@ -69,11 +76,16 @@ evolve_quantum_system = function(d_hamils, ...){
     } else {
       # Solve subsequent systems
       phi_T <- solve_schrodinger_analytically(
-        d_hamils,
+        H_b,
+        H_p,
         params,
         t,
         phi_T
       )
+      
+      # Extract results
+      phi_T = sol_T$state_vector
+      l_energy = sol_T$l_energy
       
       # Add to data-frame of solved system and calculate entanglement
       d_solved_system <- d_solved_system %>% 

@@ -119,7 +119,7 @@ with(mlflow_start_run(), {
   
   loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
   
-  d_solved_system <- evolve_quantum_system(d_hamils, params$build_hamiltonians$params)
+  d_solved_system <- evolve_quantum_system(H_b, H_p, params$build_hamiltonians$params)
   
   
   # Extract final state
@@ -147,9 +147,10 @@ with(mlflow_start_run(), {
   # Plotting Energy Gap -----------------------------------------------------
   
   loginfo("Plotting Energy Gap")
-  p_energy_gap <- d_hamils %>% 
-    plot_energy_gap()
   
+  # p_energy_gap <- d_hamils %>% 
+  #   plot_energy_gap()
+  # 
   ggsave("tmp/energy_plot.png")
   mlflow_log_artifact("tmp/energy_plot.png")
   
