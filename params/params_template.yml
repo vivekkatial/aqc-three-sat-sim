@@ -1,12 +1,13 @@
 experiment: 
-  name: "three-sat"
+  name: "three-sat-usa"
   author: "vivek"
   tracking-uri: "http://115.146.95.176:5000/"
   seed: 1032918
   utils: 
-    - "utils/schrodinger-solver.R"
+    - "src/schrodinger-solver.R"
     - "utils/define-pauli-matrices.R"
     - "src/measure-quantum/measure-entanglement.R"
+    - "tests/testthat/test-hamiltonians.R"
 
 initialise:
   source: "src/instance-generation/generate-usa-instances.R"
