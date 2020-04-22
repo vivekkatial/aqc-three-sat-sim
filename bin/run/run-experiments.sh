@@ -11,6 +11,9 @@ set -e
 # Set env vars
 source bin/init/set-environment-variables.sh
 
+# Source AWS
+module load awscli/1.16.67-GCC-6.2.0
+
 # Set the directory in which experiments parameter files stored
 export EXPERIMENT_FILE_DIR=$S3_BUCKET/$EXPERIMENT_NAME/ready/
 echo "$EXPERIMENT_FILE_DIR"
