@@ -220,6 +220,18 @@ param_grid_final <- d_params_grid %>%
   ) %>% 
   apply_experiment_rules()
 
+
+# Create TEST FILE
+test_file <- param_grid_final %>% 
+  arrange_all() %>% 
+  slice(1)
+
+mapply(
+  .write_parameter_file,
+  "EXPERIMENT_TEST.YML",
+  test_file$parameter_file_content
+  )
+
 #  Write out  to  files
 mapply(
   .write_parameter_file, 

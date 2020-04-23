@@ -17,7 +17,7 @@ initialise:
     instance_index: "{{instance_index}}"
     
 build_hamiltonians:
-  source: "src/build-hamiltonians/construct-time-evolution.R"
+  source: "src/build-hamiltonians/build-hamiltonians.R"
   params:
     n_qubits: "{{n_qubits}}"
     time_T: "{{time_T}}"
