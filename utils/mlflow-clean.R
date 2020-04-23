@@ -14,5 +14,6 @@ mlflow_client <- mlflow::mlflow_client(tracking_uri = MLFLOW_TRACKING_URI)
 
 # Delete Experiment
 # mlflow_list_experiments(client = mlflow_client)
-# mlflow_delete_experiment(experiment_id = 0, client = mlflow_client)
-
+mlflow_delete_experiment(experiment_id = 2, client = mlflow_client)
+mlflow_restore_experiment(experiment_id = 2, client = mlflow_client)
+mlflow_list_run_infos(experiment_id = 2, client =  mlflow_client)
