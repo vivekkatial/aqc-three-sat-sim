@@ -150,3 +150,25 @@ generate_clauses = function(...){
   
   d_instance_space[, order(ncol(d_instance_space):1)]
 }
+
+
+#' Function to solve 3-SAT problem using brute force.
+#' @param d_clauses A `list()` object 
+#' @param n_qubits
+solve_three_sat = function(d_clauses, n_qubits){
+  # Create instance space
+  d_instances <- .create_instance_space(n_qubits)
+  
+  # Loop through each clause and remove elements not satisfying that clause
+  for (clause in d_clauses) {
+    d_instances = .calc_satisfying_assignments(d_instances, clause)
+  }
+  
+  d_sol <- d_instances
+  d_sol %>% 
+    pull(bin_str)
+}
+
+
+
+

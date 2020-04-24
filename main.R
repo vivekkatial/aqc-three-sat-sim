@@ -54,6 +54,14 @@ if (!(params$experiment$name %in% mlflow:::mlflow_list_experiments()$name)) {
   
 }
 
+# Make a new tmp folder for this run
+if (dir.exists("tmp/")) {
+  unlink("tmp", recursive = T)
+  dir.create("tmp/")
+} else {
+  dir.create("tmp/")
+}
+
 # Start mlflow run
 loginfo("Starting Run")
 with(mlflow_start_run(), {
@@ -131,18 +139,15 @@ with(mlflow_start_run(), {
   
   state_pdf <- generate_pdf(phi_T)
   loginfo("Generating PDF across amplitudes")
+  
 
+  # Find Probability of Success ------------------------------------------------------------
   
-  # Plotting PDF ------------------------------------------------------------
+  p_success <- state_pdf %>% 
+    filter(bit_str == solve_three_sat(d_clauses, params$initialise$params$n_qubits)) %>% 
+    pull(p)
   
-  loginfo("Plotting PDF object")
-  p_state_pdf <- state_pdf %>% 
-    plot_state_pdf()
-  
-  ggsave("tmp/final_state_vector_plot.png")
-  
-  mlflow_log_artifact("tmp/final_state_vector_plot.png")
-  
+  mlflow_log_metric("p_success", p_success)
   
   # Plotting Energy Gap -----------------------------------------------------
   
@@ -165,18 +170,6 @@ with(mlflow_start_run(), {
 
   ggsave("tmp/entanglement_plot.png")
   mlflow_log_artifact("tmp/entanglement_plot.png")
-  
-
-  # Logging datafiles -------------------------------------------------------
-  d_solved_system %>% 
-    write_rds("tmp/d_solved_system.rds")
-  
-  d_clauses %>% 
-    write_rds("tmp/d_clauses.rds")
-  
-  mlflow_log_artifact("tmp/d_solved_system.rds")
-  mlflow_log_artifact("tmp/d_clauses.rds")
-  
   
   # Minimum Energy Gap ------------------------------------------------------
   
@@ -202,5 +195,15 @@ with(mlflow_start_run(), {
   
   # Ending Experiment -------------------------------------------------------
   loginfo("Experiment Complete!")
+  
+  # Logging datafiles -------------------------------------------------------
+  d_solved_system %>% 
+    write_rds("tmp/d_solved_system.rds")
+  
+  d_clauses %>% 
+    write_rds("tmp/d_clauses.rds")
+  
+  mlflow_log_artifact("tmp/d_solved_system.rds")
+  mlflow_log_artifact("tmp/d_clauses.rds")
   
 })
