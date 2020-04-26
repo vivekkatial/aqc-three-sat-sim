@@ -77,7 +77,7 @@ with(mlflow_start_run(), {
   
   # Set Seed
   loginfo("Setting Experiments Random Seed to %s", params$experiment$seed)
-  set.seed(params$experiment$seed)
+  set.seed(params$initialise$params$instance_index)
   
   # Generate Clauses --------------------------------------------------------
   
