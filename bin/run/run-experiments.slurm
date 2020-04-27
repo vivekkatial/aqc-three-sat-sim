@@ -7,12 +7,12 @@
 #SBATCH --ntasks=1
 
 # set your minimum acceptable walltime=hours:minutes:seconds
-#SBATCH -t 14:00:00
+#SBATCH -t 10-23:59:59
 
 # How much memory you need.
 # --mem will define memory per node and
 # --mem-per-cpu will define memory per CPU/core. Choose one of those.
-#SBATCH --mem=50GB
+#SBATCH --mem=100GB
 
 # Specify your email address to be notified of progress.
 ### SBATCH --mail-user=vkatial@student.unimelb.edu.au
