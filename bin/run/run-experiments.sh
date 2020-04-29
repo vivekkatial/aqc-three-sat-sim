@@ -23,7 +23,7 @@ for file in $(aws s3 ls $EXPERIMENT_FILE_DIR --endpoint-url=$MLFLOW_S3_ENDPOINT_
      echo "Copying experiment $EXPERIMENT_FILE_DIR$file params/ready/."
      
      # Pull file into local directory
-     aws s3 cp $EXPERIMENT_FILE_DIR$file params/ready/ --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
+     aws s3 mv $EXPERIMENT_FILE_DIR$file params/ready/ --endpoint-url=$MLFLOW_S3_ENDPOINT_URL
 
      # Experiment name
      experiment_name=${file::${#file}-4}
