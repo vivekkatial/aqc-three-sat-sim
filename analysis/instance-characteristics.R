@@ -28,6 +28,7 @@ d_runs %>%
   geom_line() + 
   facet_wrap(~metric, scales = "free", ncol = 1)
 
+
 d_runs %>% 
   select(metrics_clause_var_ratio, metrics_min_energy_gap, metrics_max_shannon_entropy, n_qubits) %>% 
   mutate_all(as.numeric) %>% 
@@ -35,3 +36,35 @@ d_runs %>%
   geom_point(aes(col = metrics_max_shannon_entropy))
 
   
+
+# P(success) over T -------------------------------------------------------
+
+d_runs %>% 
+  select(metrics_p_success, n_qubits, time_T) %>% 
+  ggplot(aes(x = time_T, y = metrics_p_success)) + 
+  geom_point(alpha = 0.4) + 
+  facet_wrap(~n_qubits)
+
+
+# P(success) vs Entropy ---------------------------------------------------
+
+d_runs %>% 
+  select(metrics_p_success, metrics_max_shannon_entropy) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = "USA")) + 
+  geom_point()
+
+
+# P(success) vs Min Energy Gap --------------------------------------------
+
+d_runs %>% 
+  select(metrics_p_success, metrics_min_energy_gap, time_T) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = time_T)) + 
+  geom_point() 
+
+# P(success) vs Clause to Var Ratio ---------------------------------------
+
+d_runs %>% 
+  select(metrics_max_shannon_entropy, metrics_clause_var_ratio, n_qubits) %>% 
+  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_max_shannon_entropy, col = "USA")) + 
+  geom_point() + 
+  facet_wrap(~n_qubits)

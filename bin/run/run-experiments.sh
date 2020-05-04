@@ -33,7 +33,26 @@ for file in $(aws s3 ls $EXPERIMENT_FILE_DIR --endpoint-url=$MLFLOW_S3_ENDPOINT_
      export log_file=logs/$file.log
 
      echo -e "Submitting job: \t $run_file"
+     
+     # Identify number of qubits
+     N_QUBITS=$(echo $file | grep -oP '(?<=n_qubits)[0-9]+')
+
+     # Dynamically allocate memory based on N_QUBITS
+     if (( $N_QUBITS >= 15 )) 
+     then
+         # Allocate all RAM
+         export NodeMemory=80GB
+     elif (( N_QUBITS == 14 ))
+     then 
+        export NodeMemory=40GB
+     else
+        export NodeMemory=10GB
+     fi
+
+     echo "Allocating node $NodeMemory memory"
+
+     rm params/ready/$files
      # Run experiment as an instance of the singularity container
-     sbatch --output=$log_file bin/run/run-experiments.slurm $run_file
+     sbatch --mem $NodeMemory --output=$log_file bin/run/run-experiments.slurm $run_file
 
 done
