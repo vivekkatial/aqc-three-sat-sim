@@ -49,10 +49,12 @@ for file in $(aws s3 ls $EXPERIMENT_FILE_DIR --endpoint-url=$MLFLOW_S3_ENDPOINT_
         export NodeMemory=10GB
      fi
 
-     echo "Allocating node $NodeMemory memory"
-
-     rm params/ready/$files
+     echo "Allocating node $NodeMemory memory for experiment $run_file"
+     
      # Run experiment as an instance of the singularity container
      sbatch --mem $NodeMemory --output=$log_file bin/run/run-experiments.slurm $run_file
+
+     # Remove runfile
+     rm $run_file
 
 done
