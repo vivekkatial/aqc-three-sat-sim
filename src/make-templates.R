@@ -12,6 +12,15 @@
 # Import libraries
 library(yaml)
 library(tidyverse)
+library(mlflow)
+
+# Import helper scripts
+source("utils/mlflow-utils.R")
+
+# Global Variables for `mlflow`
+EXPERIMENT="three-sat-usa"
+MLFLOW_TRACKING_URI="http://115.146.95.176:5000/"
+
 
 # Read in relavent files
 param_spec <- read_yaml("params/params_spec.yml")
@@ -101,8 +110,7 @@ make_parameter_file = function(...){
 # FILTER GRID FOR IMPOSSIBLE VALUES ---------------------------------
 
 #' The rules we have are the following:
-#' 1. Number of Qubits > k (number of clauses)
-#' 2. Number of Qubits > N_SAT (length of satisfiability clause)
+#' 1. Number of Qubits > N_SAT (length of satisfiability clause)
 #' 
 #' I have written a function apply_experiment_rules() which  will
 #' act on the parameter grid, this will  ensure that redundant experiments don't occur
@@ -110,7 +118,7 @@ make_parameter_file = function(...){
 #' This  function applies the rules outlined above
 #' @param param_grid Parameter grid dataframe
 #' @return The same grid with invalid row items removed
-apply_experiment_rules <- function(param_grid){
+apply_experiment_rules = function(param_grid){
   
   if ( FALSE %in%  (c("parameter_filename", "parameter_file_content") %in% names(param_grid))) {
     stop("Ensure parameter grid is  valid")
@@ -120,6 +128,47 @@ apply_experiment_rules <- function(param_grid){
   param_grid %>% 
     filter(n_qubits > n_sat)
 }
+
+
+# FILTER GRID FOR LARGE T and Small t -------------------------------------
+
+#' In this scenario for large evolution time (T > 50) we wont use a small time step (0.01)
+#' 
+#' 1. For time step > 50: (T = 75, t = 0.1), (T = 100, t = 0.1)
+#' 2. For time step < 50: (T = 10, t = 0.01), (T = 10, t = 0.1), ... , (T = 50, t = 0.1)
+#' @param param_grid
+#' @return A param grid with invalid values filtered out
+apply_large_time_filter = function(param_grid){
+  
+  param_grid <- param_grid %>% 
+    mutate(large_time_filter = ifelse(time_T > 50 & t_step == 0.01, "remove", "keep")) %>% 
+    filter(large_time_filter == "keep") %>% 
+    select(-large_time_filter)
+  
+  param_grid
+  
+}
+
+
+# Removed Finished Runs ---------------------------------------------------
+
+apply_remove_finished_runs <- function(param_grid){
+  
+  # Get Mlflow Data
+  d_runs <- get_mlflow_data(EXPERIMENT, MLFLOW_TRACKING_URI)
+  
+  # Create vector of finished runs
+  finished_runs <- d_runs %>% 
+    select(file_name) %>% 
+    transmute(file_name = str_replace(file_name, "params/ready/", "")) %>% 
+    pull(file_name)
+  
+  param_grid %>% 
+    filter(!(parameter_filename %in% finished_runs))
+}
+
+
+
 
 
 # Parse Vectors -----------------------------------------------------------
@@ -218,7 +267,12 @@ param_grid_final <- d_params_grid %>%
     parameter_filename         = pmap_chr(., make_parameter_filename) ,
     parameter_file_content     = pmap_chr(., make_parameter_file)
   ) %>% 
-  apply_experiment_rules()
+  # Apply rules to parameter search
+  apply_experiment_rules() %>% 
+  apply_large_time_filter() %>% 
+  apply_remove_finished_runs() %>% 
+  # Arrange according to experiment size
+  arrange(n_qubits, desc(t_step), time_T)
 
 
 # Create TEST FILE
