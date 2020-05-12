@@ -10,14 +10,13 @@ library(tidyverse)
 source("utils/mlflow-utils.R")
 
 # Global Vars
-EXPERIMENT="three-sat-usa"
-MLFLOW_TRACKING_URI="http://115.146.95.176:5000/"
+DATA_PATH = "data/d_runs.csv"
 
 # Get Mlflow Data
-d_runs <- get_mlflow_data(EXPERIMENT, MLFLOW_TRACKING_URI)
+d_runs <- get_mlflow_data(DATA_PATH)
 
 d_runs %>% 
-  filter(t_step == 0.01, time_T == 100) %>% 
+  filter(t_step == 0.01, time_t == 100) %>% 
   group_by(n_qubits) %>% 
   summarise(
     entanglement = mean(metrics_max_shannon_entropy,na.rm = T),
@@ -40,9 +39,9 @@ d_runs %>%
 # P(success) over T -------------------------------------------------------
 
 d_runs %>% 
-  select(metrics_p_success, n_qubits, time_T) %>% 
-  mutate(time_T = as.numeric(time_T)) %>% 
-  ggplot(aes(x = time_T, y = metrics_p_success)) + 
+  select(metrics_p_success, n_qubits, time_t) %>% 
+  mutate(time_t = as.numeric(time_t)) %>% 
+  ggplot(aes(x = time_t, y = metrics_p_success)) + 
   geom_point(alpha = 0.4) + 
   facet_wrap(~as.numeric(n_qubits)) +
   labs(
@@ -55,17 +54,19 @@ d_runs %>%
 d_runs %>% 
   select(metrics_p_success, metrics_max_shannon_entropy) %>% 
   ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = "USA")) + 
-  geom_point() +
+  geom_point(alpha = 0.35) +
   labs(
-    y = "Probability of Success"
+    x = "Probability of Success",
+    y = "Shannon Entropy"
   )
 
 
 # P(success) vs Min Energy Gap --------------------------------------------
 
 d_runs %>% 
-  select(metrics_p_success, metrics_min_energy_gap, time_T) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = time_T)) + 
+  select(metrics_p_success, metrics_min_energy_gap, time_t) %>% 
+  mutate(time_t = as.factor(time_t)) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = time_t)) + 
   geom_point() +
   labs(
     x = "Probability of Success"
