@@ -8,7 +8,7 @@
 #' Function to get data from MLFlow
 #' @param data_path `character` Path containing data file
 #' @return A dataframe consisting of run_info for each `FINISHED` run
-get_mlflow_data = function(experiment_name, tracking_uri, ...){
+get_mlflow_data = function(data_path, ...){
   
   # Log information
   logging::loginfo("Data last updated %s", file.info("data/d_runs.csv")$ctime)
