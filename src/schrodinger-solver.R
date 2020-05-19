@@ -51,11 +51,13 @@ solve_schrodinger_analytically = function(H_b, H_p, params, t, phi_init){
   
   # Extract energies
   l_energy <- eigen_sol$eigen_values
+  ground_state_entropy <- eigen_sol$ground_state_entropy
   
   # Output results
   list(
     state_vector = state_vec_new,
-    l_energy = l_energy
+    l_energy = l_energy,
+    ground_state_entropy = ground_state_entropy
   )
   
 }
