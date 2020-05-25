@@ -8,6 +8,8 @@
 library(mlflow)
 library(tidyverse)
 source("utils/mlflow-utils.R")
+source("analysis/enrichments/variable-clause-graph.R")
+source("analysis/enrichments/variable-graph.R")
 
 # Global Vars
 DATA_PATH = "data/d_runs.csv"
@@ -95,7 +97,7 @@ d_runs %>%
 d_runs %>% 
   select(metrics_p_success, metrics_max_shannon_entropy, time_t) %>% 
   ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = as.factor(time_t))) + 
-  geom_point(alpha = 0.8) +
+  geom_point(alpha = 0.5) +
   labs(
     x = "Probability of Success",
     y = "Shannon Entropy"
