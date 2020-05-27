@@ -7,10 +7,14 @@
 
 #' Function to extract node degree vector from graph
 get_graph_stats_vec = function(graph, node_type){
-  degree(graph) %>% 
-    as_tibble(rownames = "node") %>% 
-    filter(str_detect(node, node_type)) %>% 
-    pull(value)
+  if (is.na(graph)) {
+    return(NA)
+  } else {
+    degree(graph) %>% 
+      as_tibble(rownames = "node") %>% 
+      filter(str_detect(node, node_type)) %>% 
+      pull(value)
+  }
 }
 
 #' Function to find mean node degree

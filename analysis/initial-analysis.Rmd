@@ -1,0 +1,309 @@
+---
+title: "Initial Analysis"
+author: "Vivek Katial"
+date: "27/05/2020"
+output: html_document
+editor_options: 
+  chunk_output_type: console
+---
+
+## Introduction
+
+This analysis looks into a building a model to for understanding $\mathbb{P}(\text{success})$.
+
+We first need to get the data from `mlflow`. This analysis goes into detail on the steps required to go from loading the data to building various models. We also conduct an EDA on the instance features.
+
+## Set up Environment
+
+- Below is the code to load all the packages and files to set up the environment.
+- We also load the "enriched" data into our environment.
+
+```{r setup, warning=FALSE, message=FALSE, error=FALSE}
+# Import libraries
+library(here)
+library(tidyverse)
+library(igraph)
+library(cowplot)
+
+# Set knitr options
+knitr::opts_chunk$set(echo = TRUE, warning = F, message = F, error = F)
+
+# Source in relavent scripts
+source(here("utils/mlflow-utils.R"))
+source(here("analysis/enrichments/variable-clause-graph.R"))
+source(here("analysis/enrichments/variable-graph.R"))
+
+# Load in enriched data
+d_enriched <- read_rds(here("data/d_enriched.rds"))
+d_runs <- get_mlflow_data(here("data/d_runs.csv"))
+
+# Glimpse enriched data
+d_enriched %>% 
+  glimpse()
+```
+
+
+Our enriched dataset has a naming convention based on the prefix in each column, we describe the numeric columns below:
+
+- `metrics_<METRIC>`: With the exception of `metrics_clause_var_ratio` (Clause to variable ratio), these are metrics which are calculated **during** our simulation and cannot be calculated prior to evolving our system.
+- `params_<PARAMETER>`: With the exception of `params_instance_index` (Index for randomly generated problem), these are input parameters to our system's evolution
+- `f_p_size_<FEATURE>`: These are features related to the *problem size* of our instance.
+- `f_vcg_<FEATURE>`: These are features related to the *variable clause graph* of our instance.
+- `f_vg_<FEATURE>`: These are features related to the *variable graph* of our instance
+
+### Variable Clause Graph
+
+
+
+### Variable Graph
+
+Before modelling we need to ensure that each configuration of parameters has the same number of randomly generated samples. We will only take runs that have had atleast $n=5$ completed runs. We will also enrich another column called `use_config (bool)`. This column will indicate whether that instance should be used in our analysis.
+
+```{r}
+min_runs <- 10
+
+# Find run configs with more than n=min_runs
+d_configs <- d_enriched %>% 
+  select_if(is.numeric) %>% 
+  select(starts_with("params")) %>% 
+  count(params_n_qubits, params_time_t, params_t_step) %>% 
+  arrange(n) %>% 
+  filter(n >= min_runs) %>% 
+  mutate(load = T)
+
+d_sampled <- d_enriched %>% 
+  left_join(d_configs, by = c("params_n_qubits", "params_time_t", "params_t_step")) %>% 
+  filter(load == T) %>% 
+  group_by(params_n_qubits, params_time_t, params_t_step) %>% 
+  sample_n(min_runs) %>% 
+  select_if(is.numeric) %>% 
+  select(-experiment_id, -n) %>% 
+  ungroup()
+```
+
+# Experiments Run
+
+Before we start building a model it's useful to have a look at what experiments have ran so far.
+
+```{r}
+d_runs %>% 
+  count(params_n_qubits, params_t_step, params_time_t) %>% 
+  arrange(n) %>% 
+  ggplot(aes(x = as.factor(params_n_qubits), y = n, fill = as.factor(params_time_t))) + 
+  geom_col(aes(fill = as.factor(params_time_t)), position = position_dodge(width = 0.9)) +
+  geom_text(aes(label = n), position = position_dodge(width = 0.9), vjust = -0.7, size = 2.6) + 
+  scale_fill_brewer(palette = "Blues", name = "Evolution Time") +
+  theme_light() +
+  facet_wrap(~params_t_step) + 
+  theme(
+    legend.position = "bottom"
+  ) + 
+  labs(
+    x = "n qubits",
+    y = "Number of runs",
+    title = "Summary of Experiments Run "
+  )
+```
+
+Great, now when we sample our dataset, we see each column has the same number of completed runs in our case `r min_runs`.
+
+```{r}
+d_sampled %>% 
+  count(params_n_qubits, params_t_step, params_time_t) %>% 
+  arrange(n) %>% 
+  ggplot(aes(x = as.factor(params_n_qubits), y = n, fill = as.factor(params_time_t))) + 
+  geom_col(aes(fill = as.factor(params_time_t)), position = position_dodge(width = 0.9)) +
+  geom_text(aes(label = n), position = position_dodge(width = 0.9), vjust = -0.7, size = 2.6) + 
+  scale_fill_brewer(palette = "Blues", name = "Evolution Time") +
+  theme_light() +
+  facet_wrap(~params_t_step) + 
+  theme(
+    legend.position = "bottom"
+  ) + 
+  labs(
+    x = "n qubits",
+    y = "Number of runs",
+    title = "Summary of Experiments Run "
+  )
+```
+
+## Energy and Entanglement vs Number of Qubits
+
+```{r}
+
+d_sampled %>% 
+  group_by(params_n_qubits) %>% 
+  summarise(
+    entanglement = mean(metrics_max_shannon_entropy,na.rm = T),
+    min_energy = mean(metrics_min_energy_gap, na.rm = T)
+  ) %>% 
+  gather(metric, value, -params_n_qubits) %>% 
+  ggplot(aes(x = params_n_qubits, y = value, group = 1)) + 
+  geom_line() + 
+  facet_wrap(~metric, scales = "free", ncol = 1) + 
+  theme_light() +
+  labs(
+    x = "N Qubits",
+    y = "Value"
+  )
+```
+
+## Shannon Entropy vs Clause-to-variable ratio (by qubits)
+
+We notice that for a smaller number of qubits we have almost no variance in the number of instances generated (this is noticed by clause-to-variable-ratio). We also see that our maximum shannon entropy *decreases* as we run our evolution longer.
+
+```{r}
+d_sampled %>% 
+  select(
+    metrics_clause_var_ratio, 
+    metrics_min_energy_gap, 
+    metrics_max_shannon_entropy, 
+    params_n_qubits, 
+    params_time_t
+  ) %>% 
+  mutate_all(as.numeric) %>% 
+  mutate(
+    params_n_qubits = as.factor(params_n_qubits),
+    params_time_t = as.factor(params_time_t)
+  ) %>% 
+  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_max_shannon_entropy, col = params_time_t)) +
+  geom_point(alpha = 0.8) + 
+  facet_wrap(~params_n_qubits) + 
+  theme_light() + 
+  labs(
+    x = "Clause-Variable Ratio",
+    y = "Max Shannon Entropy",
+    title = "Shannon Entropy vs Clause-Var Ratio (by qubits)"
+  )
+```
+
+## $\mathbb{P}(\text{success})$ over T
+
+One of the key metrics we're interested in is $\mathbb{P}(\text{success})$. As we see probability of sucess increasing as the evolution run time of the algorithm  continues, we observe a higher  $\mathbb{P}(\text{success})$. We also observe a higher variance.
+
+```{r}
+d_sampled %>% 
+  select(metrics_p_success, params_n_qubits, params_time_t, params_t_step) %>% 
+  mutate(
+    params_time_t = as.numeric(params_time_t),
+    params_t_step = as.factor(params_t_step)
+  ) %>% 
+  ggplot(aes(x = params_time_t, y = metrics_p_success, col = params_t_step)) + 
+  geom_point(alpha = 0.5) + 
+  facet_wrap(~as.numeric(params_n_qubits)) +
+  labs(
+    y = "Probability of Success",
+    x = "Evolution Time"
+  ) + 
+  theme_light()
+```
+
+## Shannon Entropy vs  $\mathbb{P}(\text{success})$ (by T)
+
+Here we clearly observe that a lower shannon entropy corresponds to a higher probability of success, but this may also be confounded due to the algorithm run time, $T$.
+
+```{r}
+d_sampled %>% 
+  select(metrics_p_success, metrics_max_shannon_entropy, params_time_t) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = params_time_t)) + 
+  geom_point(alpha = 0.5) +
+  labs(
+    x = "Probability of Success",
+    y = "Shannon Entropy"
+  ) +
+  theme_light()
+
+d_sampled %>% 
+  select(metrics_p_success, metrics_max_shannon_entropy, params_time_t, params_n_qubits) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = params_time_t)) + 
+  geom_point(alpha = 0.6) +
+  facet_wrap(~params_n_qubits) + 
+  labs(
+    x = "Probability of Success",
+    y = "Shannon Entropy",
+    title = " P(success) vs Entropy (by Qubits)"
+  ) +
+  theme_light()
+```
+
+##  Min Energy Gap vs $\mathbb{P}(\text{success})$
+
+```{r}
+d_sampled %>% 
+  select(metrics_p_success, metrics_min_energy_gap, params_time_t) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = params_time_t)) + 
+  geom_point(alpha = 0.6) +
+  theme_light() +
+  labs(
+    x = "Probability of Success",
+    y = "Min Energy Gap",
+    title =  "P(success) vs Min Energy Gap"
+  )
+
+d_sampled %>% 
+  select(metrics_p_success, metrics_min_energy_gap, params_time_t, params_n_qubits) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = params_time_t)) + 
+  geom_point(alpha = 0.8) +
+  facet_wrap(~params_n_qubits) + 
+  theme_cowplot(12) + 
+  labs(
+    x = "Probability of Success",
+    y = "Min Energy Gap",
+    title = "P(Success) vs Energy Gap (by Qubit)"
+  )
+```
+
+## Clause to Var Ratio vs $\mathbb{P}(\text{success})$
+
+```{r}
+d_sampled %>% 
+  select(metrics_p_success, metrics_clause_var_ratio, params_n_qubits, params_time_t) %>% 
+  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_p_success, col = params_time_t)) + 
+  geom_point() + 
+  facet_wrap(~params_n_qubits) +
+  theme_cowplot(12) + 
+  labs(
+    x = "Clause-Variable Ratio",
+    y = "P(Success)"
+  )
+```
+
+## Problem Size Features w.r.t $\mathbb{P}(\text{success})$
+
+```{r}
+
+generate_feature_plot <- function(data, metric, feature){
+  
+  # Build general feature plot
+  p_overall <- d_sampled %>% 
+  select(-contains("metrics"), metric) %>% 
+  ggplot(aes(x=feature, y = metric, col = params_time_t)) +
+  geom_point() + 
+  theme_cowplot(12) + 
+  labs(x = "", y = "")
+  
+  # Build feature plot by qubit
+  p_by_qubit <- d_sampled %>% 
+  select(-contains("metrics"), metric) %>% 
+  ggplot(aes(x=feature, y = metric, col = params_time_t)) +
+  geom_point() + 
+  facet_wrap(~params_n_qubits, scales = "free") + 
+  theme_cowplot(12) +
+  labs(x = "", y = "")
+  
+  p_row <- plot_grid(
+  p_overall + theme(legend.position = "none"),
+  p_by_qubit + theme(legend.position = "none"),
+  labels = c("A", "B"),
+  hjust = -1,
+  nrow = 1
+)
+
+legend <- get_legend(
+  # create some space to the left of the legend
+  p_overall + theme(legend.box.margin = margin(0, 0, 0, 14))
+)
+
+plot_grid(p_row, legend, rel_widths = c(3, .4))
+}
+```

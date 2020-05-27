@@ -16,6 +16,12 @@
 #' node list and graph object
 make_variable_graph = function(d_clauses, n_qubits, ret.all = FALSE){
   
+  if (is.na(d_clauses)) {
+    return (NA)
+  } else if (d_clauses %>% unlist() %>% as.vector() %>% max() > n_qubits){
+    return (NA)
+  }
+  
   # Construct node list
   node_list <- paste0("var_",seq.int(1, n_qubits))
   
@@ -65,21 +71,21 @@ make_variable_graph = function(d_clauses, n_qubits, ret.all = FALSE){
 # Example -----------------------------------------------------------------
 
 
-example_d_clauses = list(
-  k_1 = c(1L, 3L, 4L), 
-  k_2 = c(1L, 5L, 6L), 
-  k_3 = c(1L, 4L, 6L), 
-  k_4 = c(2L, 5L, 6L), 
-  k_5 = c(1L, 2L, 5L)
-)
-
-colrs = c("tomato", "gold")
-example_qubits = 6
-
-d_clauses = example_d_clauses
-n_qubits = example_qubits
-
-var_graph = make_variable_graph(example_d_clauses, example_qubits)
-
-plot(var_graph, edge.arrow.size = 0.2, vertex.label = NA)
+# example_d_clauses = list(
+#   k_1 = c(1L, 3L, 4L), 
+#   k_2 = c(1L, 5L, 6L), 
+#   k_3 = c(1L, 4L, 6L), 
+#   k_4 = c(2L, 5L, 6L), 
+#   k_5 = c(1L, 2L, 5L)
+# )
+# 
+# colrs = c("tomato", "gold")
+# example_qubits = 6
+# 
+# d_clauses = example_d_clauses
+# n_qubits = example_qubits
+# 
+# var_graph = make_variable_graph(example_d_clauses, example_qubits)
+# 
+# plot(var_graph, edge.arrow.size = 0.2, vertex.label = NA)
 

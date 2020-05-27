@@ -21,14 +21,14 @@ d_runs <- get_mlflow_data(DATA_PATH)
 # Experiments Run ---------------------------------------------------------
 
 d_runs %>% 
-  count(n_qubits, t_step, time_t) %>% 
+  count(params_n_qubits, params_t_step, params_time_t) %>% 
   arrange(n) %>% 
-  ggplot(aes(x = as.factor(n_qubits), y = n, fill = as.factor(time_t))) + 
-  geom_col(aes(fill = as.factor(time_t)), position = position_dodge(width = 0.9)) +
+  ggplot(aes(x = as.factor(params_n_qubits), y = n, fill = as.factor(params_time_t))) + 
+  geom_col(aes(fill = as.factor(params_time_t)), position = position_dodge(width = 0.9)) +
   geom_text(aes(label = n), position = position_dodge(width = 0.9), vjust = -0.7, size = 2.6) + 
   scale_fill_brewer(palette = "Blues", name = "Evolution Time") +
   theme_light() +
-  facet_wrap(~t_step) + 
+  facet_wrap(~params_t_step) + 
   theme(
     legend.position = "bottom"
   ) + 
@@ -39,34 +39,36 @@ d_runs %>%
   )
 
 
-# Energy and Entanglement vs n_qubits -------------------------------------
+# Energy and Entanglement vs params_n_qubits -------------------------------------
 
 d_runs %>% 
-  group_by(n_qubits) %>% 
+  group_by(params_n_qubits) %>% 
   summarise(
     entanglement = mean(metrics_max_shannon_entropy,na.rm = T),
     min_energy = mean(metrics_min_energy_gap, na.rm = T)
   ) %>% 
-  gather(metric, value, -n_qubits) %>% 
-  ggplot(aes(x = n_qubits, y = value, group = 1)) + 
+  gather(metric, value, -params_n_qubits) %>% 
+  ggplot(aes(x = params_n_qubits, y = value, group = 1)) + 
   geom_line() + 
   facet_wrap(~metric, scales = "free", ncol = 1) + 
   theme_light() +
   labs(
-    x = "n_qubits"
+    x = "params_n_qubits"
   )
 
 
+# Shannon Entropy vs Clause-Var Ratio (by qubits) -------------------------
+
 d_runs %>% 
-  select(metrics_clause_var_ratio, metrics_min_energy_gap, metrics_max_shannon_entropy, n_qubits, time_t) %>% 
+  select(metrics_clause_var_ratio, metrics_min_energy_gap, metrics_max_shannon_entropy, params_n_qubits, params_time_t) %>% 
   mutate_all(as.numeric) %>% 
   mutate(
-    n_qubits = as.factor(n_qubits),
-    time_t = as.factor(time_t)
+    params_n_qubits = as.factor(params_n_qubits),
+    params_time_t = as.factor(params_time_t)
     ) %>% 
-  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_max_shannon_entropy, col = time_t)) +
+  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_max_shannon_entropy, col = params_time_t)) +
   geom_point(alpha = 0.8) + 
-  facet_wrap(~n_qubits) + 
+  facet_wrap(~params_n_qubits) + 
   #scale_color_brewer(palette = "Blues") + 
   theme_light() + 
   labs(
@@ -80,11 +82,14 @@ d_runs %>%
 # P(success) over T -------------------------------------------------------
 
 d_runs %>% 
-  select(metrics_p_success, n_qubits, time_t) %>% 
-  mutate(time_t = as.numeric(time_t)) %>% 
-  ggplot(aes(x = time_t, y = metrics_p_success)) + 
-  geom_point(alpha = 0.3) + 
-  facet_wrap(~as.numeric(n_qubits)) +
+  select(metrics_p_success, params_n_qubits, params_time_t, params_t_step) %>% 
+  mutate(
+    params_time_t = as.numeric(params_time_t),
+    params_t_step = as.factor(params_t_step)
+    ) %>% 
+  ggplot(aes(x = params_time_t, y = metrics_p_success, col = params_t_step)) + 
+  geom_point(alpha = 0.5) + 
+  facet_wrap(~as.numeric(params_n_qubits)) +
   labs(
     y = "Probability of Success",
     x = "Evolution Time"
@@ -95,8 +100,9 @@ d_runs %>%
 # P(success) vs Entropy ---------------------------------------------------
 
 d_runs %>% 
-  select(metrics_p_success, metrics_max_shannon_entropy, time_t) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = as.factor(time_t))) + 
+  select(metrics_p_success, metrics_max_shannon_entropy, params_time_t) %>% 
+  mutate(params_time = as.factor(params_time_t)) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = params_time)) + 
   geom_point(alpha = 0.5) +
   labs(
     x = "Probability of Success",
@@ -108,10 +114,10 @@ d_runs %>%
 # P(success) vs Entropy (by Qubits) ---------------------------------------
 
 d_runs %>% 
-  select(metrics_p_success, metrics_max_shannon_entropy, time_t, n_qubits) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = as.factor(time_t))) + 
+  select(metrics_p_success, metrics_max_shannon_entropy, params_time_t, params_n_qubits) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = as.factor(params_time_t))) + 
   geom_point(alpha = 0.6) +
-  facet_wrap(~n_qubits) + 
+  facet_wrap(~params_n_qubits) + 
   labs(
     x = "Probability of Success",
     y = "Shannon Entropy",
@@ -123,10 +129,9 @@ d_runs %>%
 # P(success) vs Min Energy Gap --------------------------------------------
 
 d_runs %>% 
-  select(metrics_p_success, metrics_min_energy_gap, time_t) %>% 
-  mutate(time_t = as.factor(time_t)) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = time_t)) + 
-  geom_point(alpha = 0.8) +
+  select(metrics_p_success, metrics_min_energy_gap, params_time_t) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = params_time_t)) + 
+  geom_point(alpha = 0.6) +
   theme_light() +
   labs(
     x = "Probability of Success",
@@ -138,11 +143,11 @@ d_runs %>%
 # P(Success) vs Energy Gap (by Qubit) -------------------------------------
 
 d_runs %>% 
-  select(metrics_p_success, metrics_min_energy_gap, time_t, n_qubits) %>% 
-  mutate(time_t = as.factor(time_t)) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = time_t)) + 
+  select(metrics_p_success, metrics_min_energy_gap, params_time_t, params_n_qubits) %>% 
+  mutate(params_time_t = as.factor(params_time_t)) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = params_time_t)) + 
   geom_point(alpha = 0.8) +
-  facet_wrap(~n_qubits) + 
+  facet_wrap(~params_n_qubits) + 
   theme_light() + 
   labs(
     x = "Probability of Success",
@@ -154,11 +159,11 @@ d_runs %>%
 # P(success) vs Clause to Var Ratio ---------------------------------------
 
 d_runs %>% 
-  select(metrics_p_success, metrics_clause_var_ratio, n_qubits, time_t) %>% 
-  mutate(time_t = as.factor(time_t)) %>% 
-  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_p_success, col = time_t)) + 
+  select(metrics_p_success, metrics_clause_var_ratio, params_n_qubits, params_time_t) %>% 
+  mutate(params_time_t = as.factor(params_time_t)) %>% 
+  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_p_success, col = params_time_t)) + 
   geom_point() + 
-  facet_wrap(~n_qubits) +
+  facet_wrap(~params_n_qubits) +
   theme_light() + 
   labs(
     x = "Clause-Variable Ratio",

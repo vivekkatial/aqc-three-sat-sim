@@ -11,12 +11,11 @@
 get_mlflow_data = function(data_path, ...){
   
   # Log information
-  logging::loginfo("Data last updated %s", file.info("data/d_runs.csv")$ctime)
+  logging::loginfo("Data last updated %s", file.info(data_path)$ctime)
   
-  d_runs <- read_csv("data/d_runs.csv") %>% 
+  d_runs <- read_csv(data_path) %>% 
     filter(status == "FINISHED") %>% 
-    janitor::clean_names() %>% 
-    rename_at(vars(contains("params_")), function(x) str_remove_all(x, "params_"))
+    janitor::clean_names()
   
 }
 
@@ -31,11 +30,21 @@ get_clause_data = function(run_id){
     d_clause
   } else {
     # Download from MLFlow
-    tmp_path <- mlflow_download_artifacts("d_clauses.rds", run_id = run_id)
-    d_clause <- read_rds(tmp_path)
-    d_clause %>% 
-      write_rds(path = instance_file)
-    file.remove(tmp_path)
-    d_clause
+    tryCatch(
+      {
+        tmp_path <- mlflow_download_artifacts("d_clauses.rds", run_id = run_id)
+        # Read data into R
+        d_clause <- read_rds(tmp_path)
+        d_clause %>% 
+          write_rds(path = instance_file)
+        file.remove(tmp_path)
+        d_clause
+      },
+      error = function(e){ 
+        message(e)
+        message(sprintf("\n%s collection failed", run_id))
+        return(NA)
+      }
+    )
   }
 }

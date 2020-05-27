@@ -40,7 +40,7 @@ d_enriched <- d_instances %>%
   # Add Problem size features
   mutate(
     f_p_size_n_clauses = map_dbl(d_clauses, length),
-    f_p_size_n_variables = n_qubits,
+    f_p_size_n_variables = params_n_qubits,
     f_p_size_ratio = metrics_clause_var_ratio,
     f_p_size_ratio_sq = metrics_clause_var_ratio^2,
     f_p_size_ratio_cub = metrics_clause_var_ratio^3,
@@ -53,7 +53,7 @@ d_enriched <- d_instances %>%
   ) %>% 
   # Apply VCG Node stats
   mutate(
-    f_vcg_graph = map2(d_clauses, n_qubits, make_variable_clause_graph),
+    f_vcg_graph = map2(d_clauses, params_n_qubits, make_variable_clause_graph),
     f_vcg_mean_var = map2_dbl(f_vcg_graph, "var", get_graph_node_deg_mean),
     f_vcg_mean_cls = map2_dbl(f_vcg_graph, "cls", get_graph_node_deg_mean),
     f_vcg_median_var = map2_dbl(f_vcg_graph, "var", get_graph_node_deg_median),
@@ -65,14 +65,13 @@ d_enriched <- d_instances %>%
   ) %>% 
   # Apply VG Node Stats
   mutate(
-    f_vg_graph = map2(d_clauses, n_qubits, make_variable_graph),
+    f_vg_graph = map2(d_clauses, params_n_qubits, make_variable_graph),
     f_vg_mean = map2_dbl(f_vg_graph, "var", get_graph_node_deg_mean),
     f_vg_median = map2_dbl(f_vg_graph, "var", get_graph_node_deg_median),
     f_vg_min = map2_dbl(f_vg_graph, "var", get_graph_node_deg_min),
     f_vg_max = map2_dbl(f_vg_graph, "var", get_graph_node_deg_max)
   )
 
-d_model <- d_enriched %>% 
-  select(starts_with("f_"), t_step, n_qubits, starts_with("metrics_")) %>% 
-  select_if(is.numeric) %>% 
-  select(-metrics_max_shannon_entropy, -metrics_min_energy_gap, -metrics_clause_var_ratio)
+d_enriched %>% 
+  filter_all(any_vars(!is.na(.))) %>% 
+  write_rds("data/d_enriched.rds")
