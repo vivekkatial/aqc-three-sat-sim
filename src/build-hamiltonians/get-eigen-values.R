@@ -32,15 +32,25 @@ get_H_curr_eigen = function(H_curr, ret.system = FALSE, ...){
     
   }
   
+  # Ground State Energy
+  
+  # Extract final column (this corresponds to the eigenvector for the lowest column)
+  ground_state_vector = H_eigen$vectors[, 2^(params$n_qubits)]
+  # Compute enrtopy of ground state
+  ground_state_entropy = calculate_entanglement(.phi = ground_state_vector)
+  
+  
   # Return values
   if (ret.system == TRUE) {
     list(
       H_eigen = H_eigen,
-      eigen_values = l_eigen
+      eigen_values = l_eigen,
+      ground_state_entropy = ground_state_entropy
     )
   } else {
     list(
-      eigen_values = l_eigen
+      eigen_values = l_eigen,
+      ground_state_entropy = ground_state_entropy
     )
   }
 }

@@ -18,18 +18,13 @@ evolve_quantum_system = function(H_b, H_p, ...){
   # Make params numeric
   params = lapply(params, as.numeric)
   
-  # if (.t == 0) {
-  #   phi_T = rep(1/(2^(params$n_qubits/2)), (2^params$n_qubits))
-  #   return(phi_T)
-  # }
-  
   # Initialise empty DF
   d_solved_system <- tibble(
     time = numeric(),
-    phi_t = list(),
     shannon_entropy = numeric(),
     lambda_1 = numeric(),
-    lambda_2 = numeric()
+    lambda_2 = numeric(),
+    ground_state_entropy = numeric()
   )
   
   for (t in seq(0, params$time_T, by = params$t_step)) {
@@ -47,10 +42,10 @@ evolve_quantum_system = function(H_b, H_p, ...){
         bind_rows(
           tibble(
             time = t,
-            phi_t = list(phi_0),
             shannon_entropy = calculate_entanglement(phi_0, params$n_qubits), # Calculate entanglement
             lambda_1 = as.numeric(init_eigen_vals$lambda_1),
-            lambda_2 = as.numeric(init_eigen_vals$lambda_2)
+            lambda_2 = as.numeric(init_eigen_vals$lambda_2),
+            ground_state_entropy = 0
           )
         )
       
@@ -68,16 +63,17 @@ evolve_quantum_system = function(H_b, H_p, ...){
       # Extract results
       phi_T = sol_T$state_vector
       l_energy = sol_T$l_energy
+      ground_state_entropy = sol_T$ground_state_entropy
       
       # Add to data-frame of solved system
       d_solved_system <- d_solved_system %>% 
         bind_rows(
           tibble(
             time = t,
-            phi_t = list(phi_T),
             shannon_entropy = calculate_entanglement(phi_T, params$n_qubits), # Calculate entanglement
             lambda_1 = l_energy$n_1,
-            lambda_2 = l_energy$n_2
+            lambda_2 = l_energy$n_2,
+            ground_state_entropy = ground_state_entropy
           )
         )
       
@@ -94,21 +90,24 @@ evolve_quantum_system = function(H_b, H_p, ...){
       # Extract results
       phi_T = sol_T$state_vector
       l_energy = sol_T$l_energy
+      ground_state_entropy = sol_T$ground_state_entropy
       
       # Add to data-frame of solved system and calculate entanglement
       d_solved_system <- d_solved_system %>% 
         bind_rows(
           tibble(
             time = t,
-            phi_t = list(phi_T),
             shannon_entropy = calculate_entanglement(phi_T, params$n_qubits), # Calculate entanglement as shannon entropy
             lambda_1 = l_energy$n_1,
-            lambda_2 = l_energy$n_2
+            lambda_2 = l_energy$n_2,
+            ground_state_entropy = sol_T$ground_state_entropy
           )
         )
-      
     }
   }
   
-  d_solved_system
+  list(
+    d_solved_system = d_solved_system,
+    phi_T = phi_T
+  )
 }

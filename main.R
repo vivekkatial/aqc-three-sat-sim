@@ -127,11 +127,13 @@ with(mlflow_start_run(), {
   
   loginfo("Time Evolution of the System Built, Solving Schrödingers Equation")
   
-  d_solved_system <- evolve_quantum_system(H_b, H_p, params$build_hamiltonians$params)
+  l_solved_system <- evolve_quantum_system(H_b, H_p, params$build_hamiltonians$params)
+  d_solved_system <- l_solved_system$d_solved_system
   
   
   # Extract final state
-  phi_T <- d_solved_system[[nrow(d_solved_system), "phi_t"]]
+  phi_T <- l_solved_system$phi_T %>% 
+    unlist()
 
   loginfo("Solved system for T='%s'", params$build_hamiltonians$params$time_T)
   
@@ -158,19 +160,29 @@ with(mlflow_start_run(), {
 
   ggsave("tmp/energy_plot.png")
   mlflow_log_artifact("tmp/energy_plot.png")
-  
-  
-  # Plotting Entanglement ---------------------------------------------------
 
-  loginfo("Plotting Entanglement")
+  # Plotting State Entanglement ---------------------------------------------
+  
+  loginfo("Plotting State Entanglement")
   
   p_entanglement <- d_solved_system %>% 
     select(time, shannon_entropy) %>% 
-    plot_entanglement()
+    plot_entanglement(label = "State Entropy")
 
   ggsave("tmp/entanglement_plot.png")
   mlflow_log_artifact("tmp/entanglement_plot.png")
   
+
+  # Plotting Ground State Entanglement --------------------------------------
+  loginfo("Plotting Ground State Entanglement")
+  
+  p_gs_entanglement <- d_solved_system %>% 
+    select(time, shannon_entropy = ground_state_entropy) %>% 
+    plot_entanglement(label = "Ground State Entropy")
+  
+  ggsave("tmp/gs_entanglement_plot.png")
+  mlflow_log_artifact("tmp/gs_entanglement_plot.png")
+
   # Minimum Energy Gap ------------------------------------------------------
   
   # TODO: Chat to charles about what the best metric for this is!!
@@ -187,6 +199,36 @@ with(mlflow_start_run(), {
   
   max_shannon_entropy <- max(d_solved_system$shannon_entropy)
   mlflow_log_metric("max_shannon_entropy", max_shannon_entropy)
+  
+  max_ground_state_entropy <- max(d_solved_system$ground_state_entropy)
+  mlflow_log_metric("max_ground_state_entropy", max_ground_state_entropy)
+  
+  
+
+  # Mean Entanglement Entropy -----------------------------------------------
+
+  mean_shannon_entropy <- mean(d_solved_system$shannon_entropy)
+  mlflow_log_metric("mean_shannon_entropy", mean_shannon_entropy)
+  
+  mean_ground_state_entropy <- mean(d_solved_system$ground_state_entropy)
+  mlflow_log_metric("mean_ground_state_entropy", mean_ground_state_entropy)
+  
+  # Median Entanglement Entropy ---------------------------------------------
+
+  median_shannon_entropy <- median(d_solved_system$shannon_entropy)
+  mlflow_log_metric("median_shannon_entropy", median_shannon_entropy)
+  
+  median_ground_state_entropy <- median(d_solved_system$ground_state_entropy)
+  mlflow_log_metric("median_ground_state_entropy", median_ground_state_entropy)
+  
+
+  # Standard Deviation Entanglement Entropy ---------------------------------
+
+  sd_shannon_entropy <- sd(d_solved_system$shannon_entropy)
+  mlflow_log_metric("sd_shannon_entropy", sd_shannon_entropy)
+  
+  sd_ground_state_entropy <- sd(d_solved_system$ground_state_entropy)
+  mlflow_log_metric("sd_ground_state_entropy",  sd_ground_state_entropy)
 
   # SAT - Clause/Var Ratio --------------------------------------------------
   
@@ -203,7 +245,11 @@ with(mlflow_start_run(), {
   d_clauses %>% 
     write_rds("tmp/d_clauses.rds")
   
+  phi_T %>% 
+    write_rds("tmp/phi_T.rds")
+  
   mlflow_log_artifact("tmp/d_solved_system.rds")
   mlflow_log_artifact("tmp/d_clauses.rds")
+  mlflow_log_artifact("tmp/phi_T.rds")
   
 })
