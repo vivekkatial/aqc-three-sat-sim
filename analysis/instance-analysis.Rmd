@@ -36,40 +36,42 @@ source(here("src/instance-generation/generate-usa-instances.R"))
 ```
 
 
-## Setup Instance Generation
-```{r}
-d_instance_set <- read_rds("data/d_instance_set.rds")
+## Clause / Variable Ratio by Instance Generation Technique
 
-d_instance_set %>% 
+```{r}
+d_instance_set <- read_rds(here("data/d_instance_set.rds"))
+# Create instnaces
+d_instances <- d_instance_set %>% 
   gather(type, clause, c(-n_qubits, -params, -n_sat, -instance_index)) %>% 
   mutate(
     n_vars = n_qubits,
     n_cls = map_dbl(clause, length),
     clause_var_ratio = n_cls/n_vars
-    ) %>% 
-  ggplot(aes(x = clause_var_ratio)) +
-  geom_histogram(col = "white") + 
+    )
+
+d_instances %>% 
+  ggplot(aes(x = clause_var_ratio, fill = n_vars)) +
+  geom_histogram(col = "white", bins = 20, aes(fill = n_qubits)) + 
   facet_wrap(~type) +
   theme_light() +
   labs(
     x = "Clause / Variable Ratio"
   )
-
 ```
 
-
-
+## Clause / Var Ratio by Qubits
 
 ```{r}
-
-d_time <- map(5:20, function(x){
-  t = system.time(list(n_qubits = x, n_sat = 3) %>% generate_clauses())
-  t[[3]]
-}) %>% 
-  tibble(value = .) %>% 
-  mutate(
-    value = as.numeric(value),
-    n = 1:n() + 4
+d_instances %>% 
+  mutate(n_qubits = as.factor(n_qubits)) %>% 
+  ggplot(aes(x = n_qubits, y = clause_var_ratio, col = type)) +
+  geom_boxplot(outlier.size = 0.4, outlier.colour = NULL) + 
+  theme_light() + 
+  labs(
+    x = "n qubits",
+    y = "Clause / Variable Ratio"
+  ) + 
+  theme(
+    legend.position = "bottom"
   )
-
 ```
