@@ -1,5 +1,5 @@
 ###############################################################################
-# Generating USA Instances for 3SAT (@Farhi2001)
+# Generating Relaxed USA Instances for 3SAT
 #
 # Created Date: Mon Mar 16 11:29:23 2020
 # Author: Vivek Katial
@@ -9,10 +9,9 @@
 #' @param `list(n_qubits = N, n_sat = k)` Where N as an `int` which represents the the number of qubits and `k` number of literals in each SAT clause
 #' @example
 #' list(n_qubits = 13, n_sat=3) %>% 
-#'  generate_clauses()
-generate_clauses = function(...){
+#'  generate_usa_clauses()
+generate_relaxed_usa_clauses = function(...){
   
-
   # Extract params
   params <- list(...)[[1]]
   
@@ -46,19 +45,15 @@ generate_clauses = function(...){
       
       # Filter to only new instances
       d_filtered_instances = .calc_satisfying_assignments(d_filtered_instances, clause_i)
-
+      
       # Find new number of satisfying assignments
       new_num_sat_assignments = nrow(d_filtered_instances)
       
-      if (new_num_sat_assignments < num_sat_assignments & num_sat_assignments > 1) {
-        # Adding clause
-        # print(sprintf("Adding clause %s", clause_i))
-        # Add new clause to the list of clauses
-        clauses[[paste0("k_", i)]] = clause_i
-        num_sat_assignments = new_num_sat_assignments
-        # Increment clause ticker
-        i = i + 1
-      }
+      clauses[[paste0("k_", i)]] = clause_i
+      num_sat_assignments = new_num_sat_assignments
+      # Increment clause ticker
+      i = i + 1
+      
     }
   }
   
