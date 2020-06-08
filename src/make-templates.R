@@ -154,17 +154,23 @@ apply_large_time_filter = function(param_grid){
 
 apply_remove_finished_runs <- function(param_grid){
   
-  # Get Mlflow Data
-  d_runs <- get_mlflow_data("data/d_runs.csv")
-  
-  # Create vector of finished runs
-  finished_runs <- d_runs %>% 
-    select(file_name = params_file_name) %>% 
-    transmute(file_name = str_replace(file_name, "params/ready/", "")) %>% 
-    pull(file_name)
-  
-  param_grid %>% 
-    filter(!(parameter_filename %in% finished_runs))
+  if (!file.exists("data/d_runs.csv")) {
+    print("WARNING: Currently no `d_runs.csv` file present")
+    return (param_grid)
+  } else {
+    # Get Mlflow Data
+    d_runs <- get_mlflow_data("data/d_runs.csv")
+    
+    # Create vector of finished runs
+    finished_runs <- d_runs %>% 
+      select(file_name = params_file_name) %>% 
+      transmute(file_name = str_replace(file_name, "params/ready/", "")) %>% 
+      pull(file_name)
+    
+    param_grid %>% 
+      filter(!(parameter_filename %in% finished_runs))
+  }
+
 }
 
 
