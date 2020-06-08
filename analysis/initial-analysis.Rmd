@@ -29,6 +29,9 @@ library(igraph)
 library(cowplot)
 library(grid)
 library(gridExtra)
+library(rpart)
+library(randomForest)
+library(modelr)
 library(tidyverse)
 library(GGally)
 library(RColorBrewer)
@@ -317,155 +320,6 @@ d_sampled %>%
   )
 ```
 
-# Features - Problems Size
-
-## Problem Size Features w.r.t $\mathbb{P}(\text{success})$
-
-```{r, echo=F, results=F}
-p_size_features <- d_sampled %>% 
-  select(contains("f_p_size")) %>% 
-  names()
-
-lapply(p_size_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_p_success",
-    feature = x
-    )
-})
-```
-
-## Problem Size Features w.r.t Shannon Entropy
-
-```{r, echo=F, results=F}
-p_size_features <- d_sampled %>% 
-  select(contains("f_p_size")) %>% 
-  names()
-
-lapply(p_size_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_max_shannon_entropy",
-    feature = x
-    )
-})
-```
-
-## Problem Size Features w.r.t Min Energy Gap
-
-```{r, echo=F, results=F}
-p_size_features <- d_sampled %>% 
-  select(contains("f_p_size")) %>% 
-  names()
-
-lapply(p_size_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_min_energy_gap",
-    feature = x
-    )
-})
-```
-
-# Features - Variable Clause Graph
-
-## Variable Clause Graph Features w.r.t $\mathbb{P}(\text{success})$
-
-```{r, echo=F, results=F}
-vcg_features <- d_sampled %>% 
-  select(contains("f_vcg_")) %>% 
-  names()
-
-lapply(vcg_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_p_success",
-    feature = x
-    )
-})
-```
-
-## Variable Clause Graph Features w.r.t Shannon Entropy
-
-```{r, echo=F, results=F}
-vcg_features <- d_sampled %>% 
-  select(contains("f_vcg_")) %>% 
-  names()
-
-lapply(vcg_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_max_shannon_entropy",
-    feature = x
-    )
-})
-```
-
-## Variable Clause Graph Features w.r.t Min Energy Gap
-
-```{r, echo=F, results=F}
-vcg_features <- d_sampled %>% 
-  select(contains("f_vcg_")) %>% 
-  names()
-
-lapply(vcg_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_min_energy_gap",
-    feature = x
-    )
-})
-```
-
-# Features - Variable Graph
-
-## Variable Graph Features w.r.t $\mathbb{P}(\text{success})$
-
-```{r, echo=F, results=F}
-vg_features <- d_sampled %>% 
-  select(contains("f_vg_")) %>% 
-  names()
-
-lapply(vg_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_p_success",
-    feature = x
-    )
-})
-```
-
-## Variable Graph Features w.r.t Shannon Entropy
-
-```{r, echo=F, results=F}
-vg_features <- d_sampled %>% 
-  select(contains("f_vg_")) %>% 
-  names()
-
-lapply(vg_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_max_shannon_entropy",
-    feature = x
-    )
-})
-```
-
-## Variable Graph Features w.r.t Min Energy Gap
-
-```{r, echo=F, results=F}
-vg_features <- d_sampled %>% 
-  select(contains("f_vg_")) %>% 
-  names()
-
-lapply(vg_features, function(x){
-  generate_feature_plot(
-    data = d_sampled,
-    metric = "metrics_min_energy_gap",
-    feature = x
-    )
-})
-```
 
 # Modelling $\mathbb{P}(\text{success})$
 
@@ -475,13 +329,14 @@ First we need to remove columns with no standard deviation and also ones with mi
 
 We can now checkout a correlation matrix.
 ```{r}
-d_model <- d_sampled %>% 
+# Model for p_success
+d_model_ps <- d_sampled %>% 
   select_if(is.numeric) %>% 
   select(-starts_with(c("metric", "params")), metrics_p_success) %>% 
   filter_all(all_vars(!is.na(.))) %>% 
   Filter(f = sd, .)
 
-M <-cor(d_model)
+M <-cor(d_model_ps)
 corrplot(
   M, 
   type="upper", 
@@ -492,12 +347,209 @@ corrplot(
   )
 ```
 
-Let's look at the model summary:
+Ok we can see a bunch of these features are completely correlated with each other.
 
+## Simple Linear Regression
+
+Let's start off with a basic `lm`.
 ```{r}
-d_model %>% 
-  lm(data = ., formula = metrics_p_success ~ .) %>% 
-  summary()
+model_ps_lm <- d_model_ps %>% 
+  lm(formula = metrics_p_success ~ ., data = .)
+
+summary(model_ps_lm)
 ```
 
+Ok, horrible fit! We also see all the linearised ratio terms are `NA` due to singularities.
 
+```{r}
+model_ps_lm_1 <- d_model_ps %>% 
+  select(-f_p_size_lin_ratio, -f_p_size_lin_ratio_sq, -f_p_size_lin_ratio_cb) %>% 
+  lm(formula = metrics_p_success ~ ., data = .)
+
+summary(model_ps_lm_1)
+```
+
+We still see a terrible fit.
+
+```{r}
+model_ps_lm_1 %>% 
+  add_predictors(.)
+
+```
+## Decision Tree (Regression)
+
+```{r}
+m_fit <- d_model %>% 
+  rpart(metrics_p_success ~ ., method="anova", data= .)
+
+printcp(m_fit) # display the results
+plotcp(m_fit) # visualize cross-validation results
+summary(m_fit) # detailed summary of splits
+
+# create additional plots
+par(mfrow=c(1,2)) # two plots on one page
+rsq.rpart(m_fit) # visualize cross-validation results  
+# plot tree
+plot(m_fit, uniform=TRUE,
+   main="Regression Tree for Probability of Success ")
+text(m_fit, use.n=TRUE, all=TRUE, cex=.8)
+```
+
+## Random Forest
+
+Let's look at the model summary:
+
+
+
+
+## XGBoost (eXtreme Gradient Boosted Trees)
+
+<!-- # Features - Problems Size -->
+
+<!-- ## Problem Size Features w.r.t $\mathbb{P}(\text{success})$ -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- p_size_features <- d_sampled %>%  -->
+<!--   select(contains("f_p_size")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(p_size_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_p_success", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
+
+<!-- ## Problem Size Features w.r.t Shannon Entropy -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- p_size_features <- d_sampled %>%  -->
+<!--   select(contains("f_p_size")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(p_size_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_max_shannon_entropy", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
+
+<!-- ## Problem Size Features w.r.t Min Energy Gap -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- p_size_features <- d_sampled %>%  -->
+<!--   select(contains("f_p_size")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(p_size_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_min_energy_gap", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
+
+<!-- # Features - Variable Clause Graph -->
+
+<!-- ## Variable Clause Graph Features w.r.t $\mathbb{P}(\text{success})$ -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- vcg_features <- d_sampled %>%  -->
+<!--   select(contains("f_vcg_")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(vcg_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_p_success", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
+
+<!-- ## Variable Clause Graph Features w.r.t Shannon Entropy -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- vcg_features <- d_sampled %>%  -->
+<!--   select(contains("f_vcg_")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(vcg_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_max_shannon_entropy", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
+
+<!-- ## Variable Clause Graph Features w.r.t Min Energy Gap -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- vcg_features <- d_sampled %>%  -->
+<!--   select(contains("f_vcg_")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(vcg_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_min_energy_gap", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
+
+<!-- # Features - Variable Graph -->
+
+<!-- ## Variable Graph Features w.r.t $\mathbb{P}(\text{success})$ -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- vg_features <- d_sampled %>%  -->
+<!--   select(contains("f_vg_")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(vg_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_p_success", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
+
+<!-- ## Variable Graph Features w.r.t Shannon Entropy -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- vg_features <- d_sampled %>%  -->
+<!--   select(contains("f_vg_")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(vg_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_max_shannon_entropy", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->
+
+<!-- ## Variable Graph Features w.r.t Min Energy Gap -->
+
+<!-- ```{r, echo=F, results=F} -->
+<!-- vg_features <- d_sampled %>%  -->
+<!--   select(contains("f_vg_")) %>%  -->
+<!--   names() -->
+
+<!-- lapply(vg_features, function(x){ -->
+<!--   generate_feature_plot( -->
+<!--     data = d_sampled, -->
+<!--     metric = "metrics_min_energy_gap", -->
+<!--     feature = x -->
+<!--     ) -->
+<!-- }) -->
+<!-- ``` -->

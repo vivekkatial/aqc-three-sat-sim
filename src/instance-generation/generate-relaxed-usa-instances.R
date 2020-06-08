@@ -10,7 +10,7 @@
 #' @example
 #' list(n_qubits = 13, n_sat=3) %>% 
 #'  generate_usa_clauses()
-generate_relaxed_usa_clauses = function(...){
+generate_clauses = function(...){
   
   # Extract params
   params <- list(...)[[1]]

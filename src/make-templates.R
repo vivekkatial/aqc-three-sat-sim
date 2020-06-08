@@ -18,7 +18,7 @@ library(mlflow)
 source("utils/mlflow-utils.R")
 
 # Global Variables for `mlflow`
-EXPERIMENT="three-sat-usa"
+EXPERIMENT="three-sat-usa-inc-gs"
 MLFLOW_TRACKING_URI="http://115.146.95.176:5000/"
 
 
@@ -155,11 +155,11 @@ apply_large_time_filter = function(param_grid){
 apply_remove_finished_runs <- function(param_grid){
   
   # Get Mlflow Data
-  d_runs <- get_mlflow_data(EXPERIMENT, MLFLOW_TRACKING_URI)
+  d_runs <- get_mlflow_data("data/d_runs.csv")
   
   # Create vector of finished runs
   finished_runs <- d_runs %>% 
-    select(file_name) %>% 
+    select(file_name = params_file_name) %>% 
     transmute(file_name = str_replace(file_name, "params/ready/", "")) %>% 
     pull(file_name)
   

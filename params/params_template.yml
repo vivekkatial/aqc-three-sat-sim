@@ -1,5 +1,5 @@
 experiment: 
-  name: "three-sat-usa"
+  name: "three-sat-usa-inc-gs"
   author: "vivek"
   tracking-uri: "http://115.146.95.176:5000/"
   seed: 1032918
@@ -10,11 +10,12 @@ experiment:
     - "tests/testthat/test-hamiltonians.R"
 
 initialise:
-  source: "src/instance-generation/generate-usa-instances.R"
+  source: "src/instance-generation/generate-{{instance_type}}.R"
   params:
     n_qubits: "{{n_qubits}}"
     n_sat: "{{n_sat}}"
     instance_index: "{{instance_index}}"
+    instance_type: "{{instance_type}}"
     
 build_hamiltonians:
   source: "src/build-hamiltonians/build-hamiltonians.R"
