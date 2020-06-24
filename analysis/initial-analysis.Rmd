@@ -129,7 +129,6 @@ d_sampled <- d_enriched %>%
   filter(load == T) %>% 
   group_by(params_n_qubits, params_time_t, params_t_step) %>% 
   sample_n(min_runs) %>% 
-  select_if(is.numeric) %>% 
   select(-experiment_id, -n) %>% 
   ungroup()
 ```
@@ -185,13 +184,13 @@ d_sampled %>%
 ```{r}
 
 d_sampled %>% 
-  group_by(params_n_qubits) %>% 
+  group_by(params_n_qubits, params_instance_type) %>% 
   summarise(
     entanglement = mean(metrics_max_shannon_entropy,na.rm = T),
     min_energy = mean(metrics_min_energy_gap, na.rm = T)
   ) %>% 
-  gather(metric, value, -params_n_qubits) %>% 
-  ggplot(aes(x = params_n_qubits, y = value, group = 1)) + 
+  gather(metric, value, -params_n_qubits, -params_instance_type) %>% 
+  ggplot(aes(x = params_n_qubits, y = value, col = params_instance_type)) + 
   geom_line() + 
   facet_wrap(~metric, scales = "free", ncol = 1) + 
   theme_light() +
@@ -206,19 +205,19 @@ d_sampled %>%
 We notice that for a smaller number of qubits we have almost no variance in the number of instances generated (this is noticed by clause-to-variable-ratio). We also see that our maximum shannon entropy *decreases* as we run our evolution longer.
 
 ```{r}
-d_sampled %>% 
+d_enriched %>% 
   select(
     metrics_clause_var_ratio, 
     metrics_min_energy_gap, 
     metrics_max_shannon_entropy, 
     params_n_qubits, 
-    params_time_t
-  ) %>% 
-  mutate_all(as.numeric) %>% 
+    params_time_t,
+    params_instance_type
+  ) %>%
   mutate(
     params_n_qubits = as.factor(params_n_qubits)
     ) %>% 
-  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_max_shannon_entropy, col = params_time_t)) +
+  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_max_shannon_entropy, col = params_instance_type)) +
   geom_point(alpha = 0.8) + 
   facet_wrap(~params_n_qubits) + 
   theme_light() + 
@@ -234,13 +233,13 @@ d_sampled %>%
 One of the key metrics we're interested in is $\mathbb{P}(\text{success})$. As we see probability of sucess increasing as the evolution run time of the algorithm  continues, we observe a higher  $\mathbb{P}(\text{success})$. We also observe a higher variance.
 
 ```{r}
-d_sampled %>% 
-  select(metrics_p_success, params_n_qubits, params_time_t, params_t_step) %>% 
+d_enriched %>% 
+  select(metrics_p_success, params_n_qubits, params_time_t, params_t_step, params_instance_type) %>% 
   mutate(
     params_time_t = as.numeric(params_time_t),
     params_t_step = as.factor(params_t_step)
   ) %>% 
-  ggplot(aes(x = params_time_t, y = metrics_p_success, col = params_t_step)) + 
+  ggplot(aes(x = params_time_t, y = metrics_p_success, col = params_instance_type)) + 
   geom_point(alpha = 0.5) + 
   facet_wrap(~as.numeric(params_n_qubits)) +
   labs(
@@ -256,20 +255,27 @@ Here we clearly observe that a lower shannon entropy corresponds to a higher pro
 
 ```{r}
 d_sampled %>% 
-  select(metrics_p_success, metrics_max_shannon_entropy, params_time_t) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = params_time_t)) + 
+  select(metrics_p_success, metrics_max_shannon_entropy, params_time_t, params_instance_type) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = params_instance_type)) + 
   geom_point(alpha = 0.5) +
   labs(
     x = "Probability of Success",
     y = "Shannon Entropy"
   ) +
+  facet_wrap(~params_time_t) +
   theme_light()
 
 d_sampled %>% 
-  select(metrics_p_success, metrics_max_shannon_entropy, params_time_t, params_n_qubits) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = params_time_t)) + 
+  select(
+    metrics_p_success, 
+    metrics_max_shannon_entropy, 
+    params_time_t, 
+    params_n_qubits, 
+    params_instance_type
+    ) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_max_shannon_entropy, col = params_instance_type)) + 
   geom_point(alpha = 0.6) +
-  facet_wrap(~params_n_qubits) + 
+  facet_wrap(c("params_n_qubits", "params_time_t"),  labeller = label_wrap_gen(multi_line=FALSE)) + 
   labs(
     x = "Probability of Success",
     y = "Shannon Entropy",
@@ -282,10 +288,11 @@ d_sampled %>%
 
 ```{r}
 d_sampled %>% 
-  select(metrics_p_success, metrics_min_energy_gap, params_time_t) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = params_time_t)) + 
+  select(metrics_p_success, metrics_min_energy_gap, params_time_t, params_instance_type) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = params_instance_type)) + 
   geom_point(alpha = 0.6) +
   theme_light() +
+  facet_wrap(~params_time_t) +
   labs(
     x = "Probability of Success",
     y = "Min Energy Gap",
@@ -293,10 +300,10 @@ d_sampled %>%
   )
 
 d_sampled %>% 
-  select(metrics_p_success, metrics_min_energy_gap, params_time_t, params_n_qubits) %>% 
-  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = params_time_t)) + 
+  select(metrics_p_success, metrics_min_energy_gap, params_time_t, params_n_qubits, params_instance_type) %>% 
+  ggplot(aes(x = metrics_p_success, y = metrics_min_energy_gap, col = params_instance_type)) + 
   geom_point(alpha = 0.8) +
-  facet_wrap(~params_n_qubits) + 
+  facet_wrap(~params_n_qubits+params_time_t, labeller = label_wrap_gen(multi_line=FALSE)) + 
   theme_light() + 
   labs(
     x = "Probability of Success",
@@ -309,8 +316,14 @@ d_sampled %>%
 
 ```{r}
 d_sampled %>% 
-  select(metrics_p_success, metrics_clause_var_ratio, params_n_qubits, params_time_t) %>% 
-  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_p_success, col = params_time_t)) + 
+  select(
+    metrics_p_success, 
+    metrics_clause_var_ratio, 
+    params_n_qubits, 
+    params_time_t, 
+    params_instance_type
+    ) %>% 
+  ggplot(aes(x = metrics_clause_var_ratio, y = metrics_p_success, col = params_instance_type)) + 
   geom_point() + 
   facet_wrap(~params_n_qubits) +
   theme_light() + 
@@ -321,88 +334,88 @@ d_sampled %>%
 ```
 
 
-# Modelling $\mathbb{P}(\text{success})$
+<!-- # Modelling $\mathbb{P}(\text{success})$ -->
 
-We can now begin to model $\mathbb{P}(\text{success})$, let's start off with a simple linear model.
+<!-- We can now begin to model $\mathbb{P}(\text{success})$, let's start off with a simple linear model. -->
 
-First we need to remove columns with no standard deviation and also ones with missing values.
+<!-- First we need to remove columns with no standard deviation and also ones with missing values. -->
 
-We can now checkout a correlation matrix.
-```{r}
-# Model for p_success
-d_model_ps <- d_sampled %>% 
-  select_if(is.numeric) %>% 
-  select(-starts_with(c("metric", "params")), metrics_p_success) %>% 
-  filter_all(all_vars(!is.na(.))) %>% 
-  Filter(f = sd, .)
+<!-- We can now checkout a correlation matrix. -->
+<!-- ```{r} -->
+<!-- # Model for p_success -->
+<!-- d_model_ps <- d_sampled %>%  -->
+<!--   select_if(is.numeric) %>%  -->
+<!--   select(-starts_with(c("metric", "params")), metrics_p_success) %>%  -->
+<!--   filter_all(all_vars(!is.na(.))) %>%  -->
+<!--   Filter(f = sd, .) -->
 
-M <-cor(d_model_ps)
-corrplot(
-  M, 
-  type="upper", 
-  order="original",
-  col=brewer.pal(n=8, name="RdYlBu"),
-  tl.cex = 0.5,
-  tl.col = "blue"
-  )
-```
+<!-- M <-cor(d_model_ps) -->
+<!-- corrplot( -->
+<!--   M,  -->
+<!--   type="upper",  -->
+<!--   order="original", -->
+<!--   col=brewer.pal(n=8, name="RdYlBu"), -->
+<!--   tl.cex = 0.5, -->
+<!--   tl.col = "blue" -->
+<!--   ) -->
+<!-- ``` -->
 
-Ok we can see a bunch of these features are completely correlated with each other.
+<!-- Ok we can see a bunch of these features are completely correlated with each other. -->
 
-## Simple Linear Regression
+<!-- ## Simple Linear Regression -->
 
-Let's start off with a basic `lm`.
-```{r}
-model_ps_lm <- d_model_ps %>% 
-  lm(formula = metrics_p_success ~ ., data = .)
+<!-- Let's start off with a basic `lm`. -->
+<!-- ```{r} -->
+<!-- model_ps_lm <- d_model_ps %>%  -->
+<!--   lm(formula = metrics_p_success ~ ., data = .) -->
 
-summary(model_ps_lm)
-```
+<!-- summary(model_ps_lm) -->
+<!-- ``` -->
 
-Ok, horrible fit! We also see all the linearised ratio terms are `NA` due to singularities.
+<!-- Ok, horrible fit! We also see all the linearised ratio terms are `NA` due to singularities. -->
 
-```{r}
-model_ps_lm_1 <- d_model_ps %>% 
-  select(-f_p_size_lin_ratio, -f_p_size_lin_ratio_sq, -f_p_size_lin_ratio_cb) %>% 
-  lm(formula = metrics_p_success ~ ., data = .)
+<!-- ```{r} -->
+<!-- model_ps_lm_1 <- d_model_ps %>%  -->
+<!--   select(-f_p_size_lin_ratio, -f_p_size_lin_ratio_sq, -f_p_size_lin_ratio_cb) %>%  -->
+<!--   lm(formula = metrics_p_success ~ ., data = .) -->
 
-summary(model_ps_lm_1)
-```
+<!-- summary(model_ps_lm_1) -->
+<!-- ``` -->
 
-We still see a terrible fit.
+<!-- We still see a terrible fit. -->
 
-```{r}
-model_ps_lm_1 %>% 
-  add_predictors(.)
+<!-- ```{r} -->
+<!-- model_ps_lm_1 %>%  -->
+<!--   add_predictors(.) -->
 
-```
-## Decision Tree (Regression)
+<!-- ``` -->
+<!-- ## Decision Tree (Regression) -->
 
-```{r}
-m_fit <- d_model %>% 
-  rpart(metrics_p_success ~ ., method="anova", data= .)
+<!-- ```{r} -->
+<!-- m_fit <- d_model %>%  -->
+<!--   rpart(metrics_p_success ~ ., method="anova", data= .) -->
 
-printcp(m_fit) # display the results
-plotcp(m_fit) # visualize cross-validation results
-summary(m_fit) # detailed summary of splits
+<!-- printcp(m_fit) # display the results -->
+<!-- plotcp(m_fit) # visualize cross-validation results -->
+<!-- summary(m_fit) # detailed summary of splits -->
 
-# create additional plots
-par(mfrow=c(1,2)) # two plots on one page
-rsq.rpart(m_fit) # visualize cross-validation results  
-# plot tree
-plot(m_fit, uniform=TRUE,
-   main="Regression Tree for Probability of Success ")
-text(m_fit, use.n=TRUE, all=TRUE, cex=.8)
-```
+<!-- # create additional plots -->
+<!-- par(mfrow=c(1,2)) # two plots on one page -->
+<!-- rsq.rpart(m_fit) # visualize cross-validation results   -->
+<!-- # plot tree -->
+<!-- plot(m_fit, uniform=TRUE, -->
+<!--    main="Regression Tree for Probability of Success ") -->
+<!-- text(m_fit, use.n=TRUE, all=TRUE, cex=.8) -->
+<!-- ``` -->
 
-## Random Forest
+<!-- ## Random Forest -->
 
-Let's look at the model summary:
-
-
+<!-- Let's look at the model summary: -->
 
 
-## XGBoost (eXtreme Gradient Boosted Trees)
+
+
+<!-- ## XGBoost (eXtreme Gradient Boosted Trees) -->
 
 <!-- # Features - Problems Size -->
 
