@@ -139,14 +139,14 @@ Before we start building a model it's useful to have a look at what experiments 
 
 ```{r}
 d_runs %>% 
-  count(params_n_qubits, params_t_step, params_time_t) %>% 
+  count(params_n_qubits, params_t_step,params_instance_type, params_time_t) %>% 
   arrange(n) %>% 
   ggplot(aes(x = as.factor(params_n_qubits), y = n, fill = as.factor(params_time_t))) + 
   geom_col(aes(fill = as.factor(params_time_t)), position = position_dodge(width = 0.9)) +
   geom_text(aes(label = n), position = position_dodge(width = 0.9), vjust = -0.7, size = 2.6) + 
   scale_fill_brewer(palette = "Blues", name = "Evolution Time") +
   theme_light() +
-  facet_wrap(~params_t_step) + 
+  facet_wrap(c("params_t_step", "params_instance_type")) + 
   theme(
     legend.position = "bottom"
   ) + 
@@ -161,14 +161,14 @@ Great, now when we sample our dataset, we see each column has the same number of
 
 ```{r}
 d_sampled %>% 
-  count(params_n_qubits, params_t_step, params_time_t) %>% 
+  count(params_n_qubits, params_t_step, params_time_t,params_instance_type) %>% 
   arrange(n) %>% 
   ggplot(aes(x = as.factor(params_n_qubits), y = n, fill = as.factor(params_time_t))) + 
   geom_col(aes(fill = as.factor(params_time_t)), position = position_dodge(width = 0.9)) +
   geom_text(aes(label = n), position = position_dodge(width = 0.9), vjust = -0.7, size = 2.6) + 
   scale_fill_brewer(palette = "Blues", name = "Evolution Time") +
   theme_light() +
-  facet_wrap(~params_t_step) + 
+  facet_wrap(c("params_t_step", "params_instance_type")) + 
   theme(
     legend.position = "bottom"
   ) + 

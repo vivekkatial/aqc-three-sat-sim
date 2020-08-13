@@ -1,0 +1,49 @@
+###############################################################################
+# Matilda Prep script
+#
+# Author: Vivek Katial
+# Created 2020-07-16 11:30:57
+###############################################################################
+
+library(tidyverse)
+
+d_data <- read_rds("data/d_enriched.rds")
+d_matilda <- d_data %>% 
+  # Construct instance
+  mutate(
+    Instances = paste("Instance", params_instance_index, params_instance_type, params_n_sat, params_n_qubits, sep = "_")
+  ) %>% 
+  # Select only feature columns and performance
+  select(
+    Instances,
+    starts_with("f_"), 
+    -f_vcg_graph, 
+    -f_vg_graph,
+    alg_param_time_t = params_time_t,
+    alg_param_tstep = params_t_step,
+    Source = params_instance_type,
+    metrics_p_success
+    ) %>% 
+  mutate(
+    Source = str_replace_all(Source, pattern = "/", "_"),
+    alg_params = sprintf("algo_time_T_%s_tstep_%s", alg_param_time_t, alg_param_tstep)
+    ) %>% 
+  pivot_wider(
+    id_cols = c(starts_with("f_"), "Source", "Instances"), 
+    names_from = alg_params, 
+    values_from = metrics_p_success,
+    values_fn = list(metrics_p_success = mean)
+    ) %>% 
+  rename_at(vars(starts_with("f_")), list(~str_replace(., "f_", "feature_"))) %>% 
+  # Remove all missing values
+  filter_all(all_vars(!is.na(.))) %>% 
+  select(Instances, Source, everything()) %>% 
+  write_csv("data/d_matilda.csv")
+
+d_matilda %>% 
+  glimpse()
+d_matilda %>% 
+  ggplot(aes(x = algo_aqc)) + 
+  geom_histogram(color = "white") + 
+  theme_light() + 
+  labs(x = "P(Success)")

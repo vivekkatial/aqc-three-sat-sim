@@ -52,6 +52,8 @@ d_instances <- d_instance_set %>%
 d_instances %>% 
   ggplot(aes(x = clause_var_ratio, fill = n_vars)) +
   geom_histogram(col = "white", bins = 20, aes(fill = n_qubits)) + 
+  geom_vline(xintercept = 4.26, color = "red", linetype = "dashed") +
+  annotate("text", x = 3.7, y = 100, label = "hard region" ) +
   facet_wrap(~type) +
   theme_light() +
   labs(
