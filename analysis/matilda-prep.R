@@ -26,7 +26,8 @@ d_matilda <- d_data %>%
     ) %>% 
   mutate(
     Source = str_replace_all(Source, pattern = "/", "_"),
-    alg_params = sprintf("algo_time_T_%s_tstep_%s", alg_param_time_t, alg_param_tstep)
+    alg_params = sprintf("algo_time_T_%s_tstep_%s", alg_param_time_t, alg_param_tstep),
+    alg_params = str_replace(alg_params, "0\\.", "")
     ) %>% 
   pivot_wider(
     id_cols = c(starts_with("f_"), "Source", "Instances"), 
@@ -36,14 +37,42 @@ d_matilda <- d_data %>%
     ) %>% 
   rename_at(vars(starts_with("f_")), list(~str_replace(., "f_", "feature_"))) %>% 
   # Remove all missing values
-  filter_all(all_vars(!is.na(.))) %>% 
-  select(Instances, Source, everything()) %>% 
-  write_csv("data/d_matilda.csv")
+  filter(
+      !is.na(algo_time_T_500_tstep_1),
+      !is.na(algo_time_T_100_tstep_1)
+  ) %>% 
+  select(-starts_with("algo"), algo_time_T_500_tstep_1, algo_time_T_100_tstep_1) %>% 
+  select(Instances, Source, everything())
 
+# Test no missing values
+testthat::expect_equal(
+  d_matilda %>% 
+    summarise_all(list(~sum(is.na(.)))) %>% 
+    gather(var, n) %>% 
+    pull(n) %>% 
+    sum(),
+  0
+)
+
+# Tests unique names 
+testthat::expect_equal(
+  d_matilda %>% 
+    count(Instances) %>% 
+    pull(n) %>% 
+    sum(),
+  d_matilda %>% 
+    nrow(),
+  info = "Checking Unique Instances"
+)
+
+# Test that atleast 2 sources
+testthat::expect_gt(
+  d_matilda %>% 
+    count(Source) %>% 
+    nrow(),
+  1
+)
+
+# Write to `d_matilda.csv`
 d_matilda %>% 
-  glimpse()
-d_matilda %>% 
-  ggplot(aes(x = algo_aqc)) + 
-  geom_histogram(color = "white") + 
-  theme_light() + 
-  labs(x = "P(Success)")
+  write_csv("data/d_matilda.csv")
