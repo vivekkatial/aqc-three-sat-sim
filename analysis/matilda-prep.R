@@ -73,6 +73,36 @@ testthat::expect_gt(
   1
 )
 
+d_matilda %>% 
+  select(algo_time_T_500_tstep_1, algo_time_T_100_tstep_1) %>% 
+  gather(alg, prob) %>% 
+  ggplot(aes(x = prob)) + 
+  geom_histogram(color = "white") + 
+  facet_wrap(~alg) + 
+  theme_minimal()
+
+d_res<- d_matilda %>% 
+  filter(
+    algo_time_T_500_tstep_1 < 0.5, 
+    algo_time_T_100_tstep_1 < 0.5
+    ) %>% 
+  select(
+    feature_p_size_n_clauses, 
+    feature_p_size_lin_ratio, 
+    feature_vg_median,
+    algo_time_T_100_tstep_1,
+    algo_time_T_500_tstep_1
+    ) %>% 
+  gather(algo, prob, -starts_with("feature_"))
+
+d_res %>% 
+  ggplot(aes(x = feature_p_size_n_clauses, y = prob, col = algo)) + 
+  geom_point() + 
+  facet_wrap(~algo)
+
+d_res %>% 
+  arrange(prob)
+
 # Write to `d_matilda.csv`
 d_matilda %>% 
   write_csv("data/d_matilda.csv")
