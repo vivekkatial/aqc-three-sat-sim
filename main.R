@@ -25,8 +25,8 @@ source("utils/exp-utils.R")
 basicConfig()
 options(warn=-1)
 
-# exp_param_file <- "params/ready/EXPERIMENT_TEST.YML"
-exp_param_file <- commandArgs(trailingOnly = TRUE)
+exp_param_file <- "params/ready/EXPERIMENT_TEST.YML"
+#exp_param_file <- commandArgs(trailingOnly = TRUE)
 
 # Begin our 3SAT Experiment
 loginfo("Starting Experiment with conifguration: '%s'", exp_param_file)
@@ -94,8 +94,6 @@ with(mlflow_start_run(), {
   
   # Setting system up
   d_clauses <- generate_clauses(params$initialise$params)
-  
-  
   # Generate Time Evolution -------------------------------------------------
   
   loginfo("Clauses generated, setting up time evolution system")

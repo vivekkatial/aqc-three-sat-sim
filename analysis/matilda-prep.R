@@ -38,10 +38,10 @@ d_matilda <- d_data %>%
   rename_at(vars(starts_with("f_")), list(~str_replace(., "f_", "feature_"))) %>% 
   # Remove all missing values
   filter(
-      !is.na(algo_time_T_500_tstep_1),
-      !is.na(algo_time_T_100_tstep_1)
+      !is.na(algo_time_T_100_tstep_1),
+      !is.na(algo_time_T_400_tstep_1)
   ) %>% 
-  select(-starts_with("algo"), algo_time_T_500_tstep_1, algo_time_T_100_tstep_1) %>% 
+  select(-starts_with("algo"), algo_time_T_200_tstep_1, algo_time_T_100_tstep_1) %>% 
   select(Instances, Source, everything())
 
 # Test no missing values
@@ -74,7 +74,7 @@ testthat::expect_gt(
 )
 
 d_matilda %>% 
-  select(algo_time_T_500_tstep_1, algo_time_T_100_tstep_1) %>% 
+  select(algo_time_T_200_tstep_1, algo_time_T_100_tstep_1) %>% 
   gather(alg, prob) %>% 
   ggplot(aes(x = prob)) + 
   geom_histogram(color = "white") + 
@@ -83,7 +83,7 @@ d_matilda %>%
 
 d_res<- d_matilda %>% 
   filter(
-    algo_time_T_500_tstep_1 < 0.5, 
+    algo_time_T_200_tstep_1 < 0.5, 
     algo_time_T_100_tstep_1 < 0.5
     ) %>% 
   select(
@@ -91,7 +91,7 @@ d_res<- d_matilda %>%
     feature_p_size_lin_ratio, 
     feature_vg_median,
     algo_time_T_100_tstep_1,
-    algo_time_T_500_tstep_1
+    algo_time_T_200_tstep_1
     ) %>% 
   gather(algo, prob, -starts_with("feature_"))
 
@@ -100,9 +100,22 @@ d_res %>%
   geom_point() + 
   facet_wrap(~algo)
 
-d_res %>% 
-  arrange(prob)
+
+d_matilda %>% 
+  summary()
+
+# Define Columns which need to be scaled 
+scale_cols <- c("feature_p_size_n_variables", "feature_vcg_mean_cls", "feature_vcg_min_cls",
+                "feature_vcg_max_cls")
+
+# d_matilda %>% 
+#   filter(feature_p_size_n_variables == 8) %>% 
+#   filter(algo_time_T_100_tstep_1 > 0.15, algo_time_T_500_tstep_1 > 0.15) %>% 
+#   count()
 
 # Write to `d_matilda.csv`
 d_matilda %>% 
+  mutate_if(is.numeric, list(~ ./feature_p_size_n_variables)) %>% 
+  filter(algo_time_T_100_tstep_1 > 0.15, algo_time_T_200_tstep_1 > 0.15) %>% 
+  select(-scale_cols) %>% 
   write_csv("data/d_matilda.csv")

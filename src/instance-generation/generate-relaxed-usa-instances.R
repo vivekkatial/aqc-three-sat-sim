@@ -20,7 +20,7 @@ generate_clauses = function(...){
   n_sat = as.numeric(params$n_sat)
   
   
-  # Inititate instance space
+  # Initiate instance space
   d_instances <- .create_instance_space(n_qubits)
   
   # Initiate arbitarty variable (2^n) to find number of satisfying assignments  
@@ -39,6 +39,7 @@ generate_clauses = function(...){
     
     clause_i = sample(1:n_qubits, n_sat) %>% sort()
     
+    # Test clause_i isn't violated in d_filters 
     
     # Check that the clause exists
     if (clauses %>% has_element(clause_i) == FALSE) {
@@ -54,13 +55,24 @@ generate_clauses = function(...){
       # Increment clause ticker
       i = i + 1
       
+    } else if (num_sat_assignments == 0) {
+      # Restart
+      # Clause ticker
+      i = 2
+      # Set initial clause
+      clause_init = sample(1:n_qubits, n_sat) %>% sort()
+      # Initiate datastructure to hold clauses
+      clauses = list(k_1 = clause_init)
+      
+      # Filter for initial clause
+      d_filtered_instances = .calc_satisfying_assignments(d_instances, clause_init)
     }
   }
   
-  # Test condition
+  # Test condition on all clauses
   test_cond <- lapply(clauses, function(clause, d_satisfying_assignment){
     all(.calc_satisfying_assignments(d_instances = d_satisfying_assignment, clause) == d_satisfying_assignment)
-  }, d_filtered_instances) %>% 
+    }, d_filtered_instances) %>% 
     as.numeric() %>% 
     sum() == length(clauses)
   
@@ -101,15 +113,7 @@ generate_clauses = function(...){
       (!!rlang::sym(clause_1) +!!rlang::sym(clause_2)  +!!rlang::sym(clause_3)) == 1
     )
   
-  # Num satisfying assignments
-  num_satisf = nrow(d_filtered_instances)
-  
-  if (num_satisf == 0) {
-    d_instances
-  } else {
-    # Return filtered dataframe and num_satisfying assignments
-    d_filtered_instances  
-  }
+  d_filtered_instances
 }
 
 

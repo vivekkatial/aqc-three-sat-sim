@@ -10,7 +10,6 @@
 #' @param n_qubits The number of qubits needed
 #' @param clause The number of clauses
 construct_ham_clause = function(n_qubits, clause){
-  
   # Build base Hamiltonian
   H_c_checked = diag(2^n_qubits) %>% 
     # Create Bit string for each val

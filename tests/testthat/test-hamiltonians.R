@@ -9,9 +9,9 @@
 #' @param ham This is an r `matrix` object
 #' @param experiment_name Name of experiment
 test_problem_ham = function(ham, experiment_name){
-  
+
   # If USA instance validate USA.
-  if (experiment_name == "three-sat-usa") {
+  if (str_detect(experiment_name, "usa")) {
     test_usa_ham(ham)
   }
   
@@ -41,4 +41,5 @@ test_usa_ham = function(ham){
     }
   )
   
+  return(0)
 }

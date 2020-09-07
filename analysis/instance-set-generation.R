@@ -11,7 +11,7 @@ library(tidyverse)
 library(furrr)
 future::plan(multiprocess, workers = parallel::detectCores())
 
-# Source in relavent scripts
+# Source in relevant scripts
 source(here("src/instance-generation/generate-relaxed-usa-instances.R"))
 source(here("src/instance-generation/generate-usa-instances.R"))
 

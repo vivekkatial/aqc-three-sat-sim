@@ -28,7 +28,7 @@ mlflow.set_tracking_uri(mlflow_config['mlflow']['tracking_server_uri'])
 experiment = mlflow.get_experiment_by_name(mlflow_config['mlflow']['experiment_name'])
 
 logging.info('Downloading data from Experiment')
-d_results = mlflow.search_runs(experiment_ids=experiment.experiment_id)
+d_results = mlflow.search_runs(experiment_ids=experiment.experiment_id, run_view_type=1)
 d_results.to_csv("data/d_runs.csv", index=False)
 logging.info('Writing runs data to "data/d_runs.csv"')
 
